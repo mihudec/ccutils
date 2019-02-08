@@ -1,0 +1,9 @@
+{% if common.base_platform_type == "l2" %}
+ no switchport
+{% endif %}
+{% if params.l3.vrf %}
+ vrf forwarding {{ params.l3.vrf }}
+{% endif %}
+{% if (params.l3.ip_address and params.l3.mask) %}
+ ip address {{ params.l3.ip_address }} {{ params.l3.mask }}
+{% endif %}

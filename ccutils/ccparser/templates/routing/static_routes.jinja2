@@ -1,0 +1,3 @@
+{% for route in context.routing.static %}
+ip route {% if route.vrf %}vrf {{ route.vrf }} {% endif %}{{ route.prefix }} {{ route.mask }} {{ route.next_hop }}{% if route.distance %} {{ route.distance }}{% endif %}
+{% endfor %}

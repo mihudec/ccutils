@@ -1,0 +1,7 @@
+{% for vlan_id, params in context.vlans.items() %}
+vlan {{ vlan_id }}
+ {% if params.name %}
+ name {{ params.name }}
+ {% endif %}
+!
+{% endfor %}

@@ -1,0 +1,10 @@
+{% for name, params in context.vrfs.items() %}
+vrf definition {{ name }}
+ {% if params.description %}
+ description {{ params.description }}
+ {% endif %}
+ {% if params.rd %}
+ rd {{ params.rd }}
+ {% endif %}
+ address-family ipv4
+{% endfor %}

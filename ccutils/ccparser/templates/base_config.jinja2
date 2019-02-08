@@ -1,0 +1,45 @@
+! Generated Template Config
+!
+!
+no service pad
+service tcp-keepalives-in
+service tcp-keepalives-out
+service tcp-keepalives-in
+service tcp-keepalives-out
+!
+hostname {{ context.hostname }}
+!
+!
+clock timezone MET 1
+clock summer-time MET-SUM recurring last Sun Mar 2:00 last Sun Oct 2:00
+!
+!
+{% if context.domain_name %}
+ip domain-name {{ context.domain_name }}
+{% endif %}
+{% for name_server in context.name_servers  %}
+ip name-server {{ name_server }}
+{% endfor %}
+!
+vtp mode {{ context.vtp.mode|default("transparent", true) }}
+!
+{% if not context.cdp %}
+no cdp run
+{% endif %}
+!
+!
+!
+{% include "vrfs.jinja2" %}
+!
+!
+!
+{% include "vlans.jinja2" %}
+!
+!
+!
+{% with interfaces=context.interfaces, base_platform_type=context.base_platform_type %}
+{% include "interface/interfaces.jinja2" %}
+{% endwith %}
+!
+!
+{% include "routing/static_routes.jinja2" %}

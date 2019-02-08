@@ -1,0 +1,29 @@
+interface {{ name }}
+{% if params.description %}
+ description {{ params.description }}
+{% endif %}
+{% if "l2" in params.flags %}
+    {% include "interface/l2_interface.jinja2" %}
+{% elif "l3" in params.flags %}
+    {% include "interface/l3_interface.jinja2" %}
+{% endif %}
+{% if (not params.cdp and common.cdp) %}
+ no cdp enable
+{% elif (params.cdp and not common.cdp) %}
+ cdp enable
+{% endif %}
+{% if (not params.lldp and common.lldp) %}
+ no lldp transmit
+ no lldp receive
+{% elif (params.lldp and not common.lldp) %}
+ lldp transmit
+ lldp receive
+{% endif %}
+{% for event in params.logging_events %}
+ logging event {{ event }}
+{% endfor %}
+{% if params.shutdown %}
+ shutdown
+{% else %}
+ no shutdown
+{% endif %}
