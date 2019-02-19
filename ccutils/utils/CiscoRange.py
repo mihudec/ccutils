@@ -59,6 +59,7 @@ class CiscoRange(MutableSequence):
         _set = set(self._list)
         _set.add(tuple(data))
         self._list = self.sort_list(list(_set))
+        self.compressed_list = self.compress_list(data=self._list)
 
 
     def has_prefix(self, data):

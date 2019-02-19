@@ -4,6 +4,7 @@ import json
 import timeit
 from ccutils.utils.common_utils import get_logger
 from ccutils.ccparser import BaseConfigLine
+from ccutils.ccparser.BaseInterfaceLine import BaseInterfaceLine
 
 
 class BaseConfigParser(object):
@@ -83,7 +84,10 @@ class BaseConfigParser(object):
 
     def _create_cfg_line_objects(self):
         for number, text in enumerate(self.config_lines_str):
-            self.config_lines_obj.append(BaseConfigLine(number=number, text=text, config=self.config_lines_obj, verbosity=self.verbosity).return_obj())
+            if re.match(pattern=r"^interface\s\S+", string=text, flags=re.MULTILINE):
+                self.config_lines_obj.append(BaseInterfaceLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
+            else:
+                self.config_lines_obj.append(BaseConfigLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
         for line in self.config_lines_obj:
             line.type = line.get_type
 
@@ -116,4 +120,52 @@ class BaseConfigParser(object):
         if len(candidates):
             hostname = candidates[0].re_search(regex=regex, group=1)
         return hostname
+
+    @property
+    def cdp(self):
+        if len(self.find_objects(regex="^no cdp run")):
+            return False
+        else:
+            return True
+    
+    @property
+    def domain_name(self):
+        domain_name = None
+        domain_name_regex = re.compile(pattern=r"^ip domain-name (?P<domain_name>\S+)", flags=re.MULTILINE)
+        candidates = self.find_objects(regex=domain_name_regex)
+        if len(candidates):
+            domain_name = candidates[0].re_search(regex=domain_name_regex, group="domain_name")
+        return domain_name
+    
+    @property
+    def name_servers(self):
+        name_servers = []
+        name_servers_regex = re.compile(pattern=r"^ip name-server (?P<name_server>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
+        candidates = self.find_objects(regex=name_servers_regex)
+        for candidate in candidates:
+            name_servers.append(candidate.re_search(regex=name_servers_regex, group="name_server"))
+        return name_servers
+
+    @property
+    def vlans(self):
+        vlans = {}
+        vlan_id_regex = re.compile(pattern=r"^vlan (?P<vlan_id>\d+)", flags=re.MULTILINE)
+        vlan_name_regex = re.compile(pattern=r"^ name (?P<vlan_name>\S+)", flags=re.MULTILINE)
+        candidates = self.find_objects(regex=vlan_id_regex)
+        for candidate in candidates:
+            vlan_id = candidate.re_search(regex=vlan_id_regex, group="vlan_id")
+            vlan_name = None
+            vlan_name_candidate = candidate.re_search_children(regex=vlan_name_regex, group="vlan_name")
+            if len(vlan_name_candidate):
+                vlan_name = vlan_name_candidate[0]
+            vlans[vlan_id] = {"name": vlan_name}
+        return vlans
+
+    @property
+    def vrfs(self):
+        vrf_name_regex = re.compile(pattern=r"^(?:ip )?vrf(?: definition)? (?P<vrf_name>\S+)", flags=re.MULTILINE)
+        rd_regex = re.compile(pattern=r"^ rd (?P<rd>\S+)", flags=re.MULTILINE)
+        description_regex = re.compile(pattern=r"^ description (?P<description>.*)", flags=re.MULTILINE)
+
+
 

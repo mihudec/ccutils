@@ -10,11 +10,13 @@ class BaseConfigLine(object):
     grandchild_indent_regex = re.compile(pattern=r"^  \S", flags=re.MULTILINE)
     comment_regex = re.compile(pattern=r"^(\s+)?!", flags=re.MULTILINE)
     interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
+    
 
     def __init__(self, number, text, config, verbosity):
-        self.logger = get_logger(name="BaseConfigLine #{}".format(number), verbosity=verbosity)
+        self.logger = get_logger(name="BaseConfigLine", verbosity=verbosity)
         #print(self.logger.handlers)
-        self.config_lines_obj = config
+        self.config = config
+        self.config_lines_obj = self.config.config_lines_obj
         self.number = number
         self.text = text
         self.indent = len(self.text) - len(self.text.lstrip(" "))
@@ -54,7 +56,7 @@ class BaseConfigLine(object):
         children = self.get_children()
         result = list(filter(lambda x: bool(re.search(pattern=pattern, string=x.text)), children))
         if group:
-            result = list(map(lambda x: x.re_search(regex=regex, group=group), result))
+            result = [x.re_search(regex=pattern, group=group) for x in result]
         return result
 
 
@@ -80,12 +82,24 @@ class BaseConfigLine(object):
             elif isinstance(group, str):
                 if group in pattern.groupindex.keys():
                     return m.group(group)
+                elif group == "ALL":
+                    all_groups = list(pattern.groupindex.keys())
+                    result = {k:None for k in all_groups}
+                    for group in all_groups:
+                        try:
+                            result[group] = m.group(group)
+                        except Exception as e:
+                            pass
+                    return result
+                        
                 else:
                     self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
                     return None
         else:
             self.logger.info(msg="Given regex '{}' did not match.".format(regex))
             return None
+
+        
 
     def re_match(self, regex, group=None):
         pattern = None
@@ -149,25 +163,6 @@ class BaseConfigLine(object):
     @property
     def is_interface(self):
         return bool(re.match(self.interface_regex, self.text))
-
-    @property
-    def interface_name(self):
-        if not self.is_interface:
-            return None
-        else:
-            return self.re_match(self.interface_regex, group=1)
-
-    @property
-    def interface_description(self):
-        if not self.is_interface:
-            return None
-        else:
-            regex = r"description\s(.*)"
-            candidates = self.re_search_children(regex=regex)
-            if len(candidates) == 1:
-                return candidates[0].re_search(regex=regex, group=1)
-            else:
-                return None
 
     def __str__(self):
         return "[BaseConfigLine #{} ({}): '{}']".format(self.number, self.type, self.text)

@@ -43,3 +43,12 @@ def load_json(path):
         with path.open(mode="r") as f:
             data = json.load(f)
     return data
+
+def match_to_json(match, groups):
+    result = {k:None for k in groups}
+    for group in groups:
+        try:
+            result[group] = match.group(group)
+        except Exception:
+            pass
+    return result
