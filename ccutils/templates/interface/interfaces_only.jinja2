@@ -1,0 +1,6 @@
+{% for name, params in context.interfaces.items() %}
+    {% with name=name, params=params, common={"base_platform_type": context.base_platform_type, "cdp": context.cdp, "lldp": context.lldp} %}
+        {% include "interface/base_interface.jinja2" %}
+    {% endwith %}
+!
+{% endfor %}

@@ -21,7 +21,9 @@ ip domain-name {{ context.domain_name }}
 ip name-server {{ name_server }}
 {% endfor %}
 !
+{% if "vtp" in context.keys() %}
 vtp mode {{ context.vtp.mode|default("transparent", true) }}
+{% endif %}
 !
 {% if not context.cdp %}
 no cdp run
@@ -29,7 +31,9 @@ no cdp run
 !
 !
 !
+{% if "vrfs" in context.keys() %}
 {% include "vrfs.jinja2" %}
+{% endif %}
 !
 !
 !
@@ -42,4 +46,6 @@ no cdp run
 {% endwith %}
 !
 !
+{% if "routing" in context.keys() %}
 {% include "routing/static_routes.jinja2" %}
+{% endif %}

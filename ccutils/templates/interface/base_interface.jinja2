@@ -2,10 +2,21 @@ interface {{ name }}
 {% if params.description %}
  description {{ params.description }}
 {% endif %}
+{% if not (("svi" in params.flags) or ("port-channel" in params.flags)) %}
+{% if (common.base_platform_type == "l3") and ("l2" in params.flags) %}
+ switchport
+{% elif (common.base_platform_type == "l2") and ("l3" in params.flags) %}
+ no switchport
+{% endif %}
+{% endif %}
+{% if "pc-member" not in params.flags %}
 {% if "l2" in params.flags %}
     {% include "interface/l2_interface.jinja2" %}
 {% elif "l3" in params.flags %}
     {% include "interface/l3_interface.jinja2" %}
+{% endif %}
+{% else %}
+ channel-group {{ params.channel_group.channel_group_number }} mode {{ params.channel_group.channel_group_mode }}
 {% endif %}
 {% if (not params.cdp and common.cdp) %}
  no cdp enable
@@ -21,6 +32,9 @@ interface {{ name }}
 {% endif %}
 {% for event in params.logging_events %}
  logging event {{ event }}
+{% endfor %}
+{% for line in params.unprocessed_lines %}
+{{ line }}
 {% endfor %}
 {% if params.shutdown %}
  shutdown

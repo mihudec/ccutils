@@ -60,6 +60,22 @@ class CiscoRange(MutableSequence):
         _set.add(tuple(data))
         self._list = self.sort_list(list(_set))
         self.compressed_list = self.compress_list(data=self._list)
+    
+    def remove(self, data):
+        data = self.split_to_list(data=data)
+        if self.has_prefix(data=self._list):
+            if not self.has_prefix(data=data):
+                raise ValueError("Cannot merge prefixed and un-prefixed values!")
+        else:
+            if self.has_prefix(data=data):
+                raise ValueError("Cannot merge prefixed and un-prefixed values!")
+        for element in data:
+            try:
+                self._list.remove(element)
+            except Exception as e:
+                pass
+        self._list = self.sort_list(self._list)
+        self.compressed_list = self.compress_list(data=self._list)
 
 
     def has_prefix(self, data):

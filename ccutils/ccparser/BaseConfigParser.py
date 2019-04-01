@@ -4,7 +4,7 @@ import json
 import timeit
 from ccutils.utils.common_utils import get_logger
 from ccutils.ccparser import BaseConfigLine
-from ccutils.ccparser.BaseInterfaceLine import BaseInterfaceLine
+from ccutils.ccparser import BaseInterfaceLine
 
 
 class BaseConfigParser(object):
@@ -83,6 +83,7 @@ class BaseConfigParser(object):
             #print(val, "'{}'".format(self.config_lines_str[i]))
 
     def _create_cfg_line_objects(self):
+        start = timeit.default_timer()
         for number, text in enumerate(self.config_lines_str):
             if re.match(pattern=r"^interface\s\S+", string=text, flags=re.MULTILINE):
                 self.config_lines_obj.append(BaseInterfaceLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
@@ -90,6 +91,7 @@ class BaseConfigParser(object):
                 self.config_lines_obj.append(BaseConfigLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
         for line in self.config_lines_obj:
             line.type = line.get_type
+        self.logger.debug(msg="Created {} ConfigLine objects in {} ms.".format(len(self.config_lines_obj), (timeit.default_timer()-start)*1000))
 
     def _compile_regex(self, regex, flags=re.MULTILINE):
         pattern = None
@@ -163,9 +165,29 @@ class BaseConfigParser(object):
 
     @property
     def vrfs(self):
+        vrfs = None
         vrf_name_regex = re.compile(pattern=r"^(?:ip )?vrf(?: definition)? (?P<vrf_name>\S+)", flags=re.MULTILINE)
         rd_regex = re.compile(pattern=r"^ rd (?P<rd>\S+)", flags=re.MULTILINE)
         description_regex = re.compile(pattern=r"^ description (?P<description>.*)", flags=re.MULTILINE)
-
+        candidates = self.find_objects(regex=vrf_name_regex)
+        if len(candidates):
+            vrfs = {}
+        for candidate in candidates:
+            vrf_name = candidate.re_search(regex=vrf_name_regex, group="vrf_name")
+            if vrf_name:
+                vrfs[vrf_name] = {}
+            else:
+                continue
+            rd_candidates = candidate.re_search_children(regex=rd_regex, group="rd")
+            if len(rd_candidates):
+                vrfs[vrf_name]["rd"] = rd_candidates[0]
+            else:
+                vrfs[vrf_name]["rd"] = None
+            description_candidates = candidate.re_search_children(regex=description_regex, group="description")
+            if len(description_candidates):
+                vrfs[vrf_name]["description"] = description_candidates[0]
+            else: 
+                vrfs[vrf_name]["description"] = None
+        return vrfs
 
 

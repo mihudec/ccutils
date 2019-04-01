@@ -31,6 +31,9 @@ class BaseInterfaceLine(BaseConfigLine):
     access_vlan_regex = re.compile(pattern=r"^ switchport access vlan (?P<access_vlan>\d+)", flags=re.MULTILINE)
     voice_vlan_regex = re.compile(pattern=r"^ switchport voice vlan (?P<voice_vlan>\d+)")
 
+    channel_group_regex = re.compile(pattern=r"^ channel-group (?P<channel_group_number>\d+) mode (?P<channel_group_mode>\S+)")
+    speed_regex = re.compile(pattern=r"^ speed (?P<speed>\d+)", flags=re.MULTILINE)
+    duplex_regex = re.compile(pattern=r"^ duplex (?P<duplex>full|half)", flags=re.MULTILINE)
 
     def __init__(self, number, text, config, verbosity):
         super(BaseInterfaceLine, self).__init__(number=number, text=text, config=config, verbosity=verbosity)
@@ -60,8 +63,12 @@ class BaseInterfaceLine(BaseConfigLine):
             self.trunk_allowed_vlans_regex,
             self.access_vlan_regex,
             self.voice_vlan_regex,
+            self.channel_group_regex,
+            self.speed_regex,
+            self.duplex_regex,
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
-            re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE)
+            re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
+            re.compile(pattern=r"^ spanning-tree portfast")
         ]
         for regex in regexes:
             for child in self.re_search_children(regex=regex):
@@ -244,6 +251,29 @@ class BaseInterfaceLine(BaseConfigLine):
             voice_vlan = int(candidates[0])
         return voice_vlan
 
+    @property
+    def channel_group(self):
+        channel_group = None
+        candidates = self.re_search_children(regex=self.channel_group_regex, group="ALL")
+        if len(candidates):
+            channel_group = candidates[0]
+        return channel_group
+
+    @property
+    def speed(self):
+        speed = None
+        candidates = self.re_search_children(regex=self.speed_regex, group="speed")
+        if len(candidates):
+            speed = int(candidates[0])
+        return speed
+
+    @property
+    def duplex(self):
+        duplex = None
+        candidates = self.re_search_children(regex=self.duplex_regex, group="duplex")
+        if len(candidates):
+            duplex = candidates[0]
+        return duplex
 
     def __str__(self):
         return "[BaseInterfaceLine #{} ({}): '{}']".format(self.number, self.type, self.text)

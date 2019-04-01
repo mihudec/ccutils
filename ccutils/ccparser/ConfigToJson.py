@@ -11,6 +11,8 @@ class ConfigToJson:
         self.data = {
             "interfaces": {}
         }
+        self.parse_interfaces()
+        self.parse_common()
 
     def parse_interfaces(self):
         interface_lines = list(filter(lambda x: "interface" in x.type, self.config.config_lines_obj))
@@ -20,12 +22,28 @@ class ConfigToJson:
             port_mode = interface.port_mode
 
             self.data["interfaces"][interface_name] = {"flags": [port_mode], "description": interface.interface_description, "unprocessed_lines": interface.get_unprocessed(return_type="text")}
+            if "Vlan" in interface_name:
+                self.data["interfaces"][interface_name]["flags"].append("svi")
+            elif "Ethernet" in interface_name:
+                self.data["interfaces"][interface_name]["flags"].append("physical")
+            elif "Port-channel" in interface_name:
+                self.data["interfaces"][interface_name]["flags"].append("port-channel")
+
             # Get Shutdown State
             self.data["interfaces"][interface_name]["shutdown"] = interface.shutdown
             # Get CDP
             self.data["interfaces"][interface_name]["cdp"] = interface.cdp
             # Get Logging events
             self.data["interfaces"][interface_name]["logging_events"] = interface.logging_events
+            # Get channel group
+            self.data["interfaces"][interface_name]["channel_group"] = interface.channel_group
+            if self.data["interfaces"][interface_name]["channel_group"]:
+                self.data["interfaces"][interface_name]["flags"].append("pc-member")
+            
+            # Get speed and duplex
+            self.data["interfaces"][interface_name]["speed"] = interface.speed
+            self.data["interfaces"][interface_name]["duplex"] = interface.duplex
+
 
             
 
@@ -43,6 +61,8 @@ class ConfigToJson:
                 self.data["interfaces"][interface_name]["l3"]["ospf_priority"] = interface.ospf_priority
                 # Get standby
                 self.data["interfaces"][interface_name]["l3"]["standby"] = interface.standby
+                if self.data["interfaces"][interface_name]["l3"]["standby"]:
+                    self.data["interfaces"][interface_name]["flags"].append("standby")
                 # Get Helper Address
                 self.data["interfaces"][interface_name]["l3"]["helper_addresses"] = interface.helper_address
             elif port_mode == "l2":
@@ -67,23 +87,22 @@ class ConfigToJson:
         self.data["name_servers"] = self.config.name_servers
         self.data["cdp"] = self.config.cdp
         self.data["vlans"] = self.config.vlans
+        self.data["vrfs"] = self.config.vrfs
 
-                
-            
+    def get_interface_list(self, flags_filter=None):
+        interfaces = []
+        if not flags_filter:
+            interfaces = list(self.data["interfaces"].keys())
+        else:
+            if isinstance(flags_filter, list):
+                for interface, params in self.data["interfaces"].items():
+                    for flag in flags_filter:
+                        if flag in params["flags"]:
+                            interfaces.append(interface)
+        return interfaces
 
     @staticmethod
     def jprint(data):
         print(json.dumps(data, indent=2))
 
-if __name__ == "__main__":
-    config = BaseConfigParser(filepath=pathlib.Path(r"C:\Users\mhudec\CloudStation\Work\ALEF\MHMP\scripts\data\CFG\MHMP\cat01Ask.txt"), verbosity=1)
-    
-    ctj = ConfigToJson(config=config, verbosity=2)
-    ctj.parse_interfaces()
-    ctj.parse_common()
-    #ctj.jprint(ctj.data)
-
-
-    with open(r"C:\Users\mhudec\Develop\ccutils\MHMP\new_configs\cat01Ask.json", mode="w") as f:
-        json.dump(obj=ctj.data, fp=f, indent=2)
     

@@ -1,19 +1,15 @@
-{% if common.base_platform_type == "l3" %}
- switchport
-{% endif %}
 {% if params.l2.mode == "access" %}
  switchport mode access
  {% if (params.l2.access_vlan and params.l2.access_vlan != 1) %}
  switchport access vlan {{ params.l2.access_vlan }}
  {% endif %}
 {% elif params.l2.mode == "trunk" %}
- switchport trunk encapsulation dot1Q
  switchport mode trunk
  {% if (params.l2.native_vlan and params.l2.native_vlan != 1) %}
  switchport trunk native vlan {{ params.l2.native_vlan }} 
  {% endif %}
  {% if params.l2.allowed_vlans %}
  switchport trunk allowed vlan {% for vlan_range in params.l2.allowed_vlans %}{{ vlan_range }}{% if not loop.last %},{% endif %}{% endfor %}
+
  {% endif %}
 {% endif %}
-

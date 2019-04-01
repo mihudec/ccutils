@@ -1,9 +1,38 @@
-{% if common.base_platform_type == "l2" %}
- no switchport
-{% endif %}
 {% if params.l3.vrf %}
  vrf forwarding {{ params.l3.vrf }}
 {% endif %}
-{% if (params.l3.ip_address and params.l3.mask) %}
- ip address {{ params.l3.ip_address }} {{ params.l3.mask }}
+{% for entry in params.l3.ip_addresses %}
+ ip address {{ entry.ip_address }} {{ entry.mask }}{% if entry.secondary %} secondary{% endif %}
+
+{% endfor %}
+{% if params.l3.standby %}
+ standby version {{ params.l3.standby.version }}
+{% for group, group_params in params.l3.standby.groups.items() %}
+{% if group_params.hello and group_params.hold %}
+ standby {{ group }} timers {{ group_params.hello }} {{ group_params.hold }}
 {% endif %}
+{% if group_params.priority %}
+ standby {{ group }} priority {{ group_params.priority }}
+{% endif %}
+{% if group_params.preempt %}
+ standby {{ group }} preempt
+{% endif %}
+{% if group_params.authentication_type %}
+ standby {{ group }} authentication {{ group_params.authentication_type }} key-string {{ group_params.key_type }} {{ group_params.key_string }} 
+{% endif %}
+{% for ip_entry in group_params.ip_addresses %}
+ standby {{ group }} ip {{ ip_entry.ip_address }}{% if ip_entry.secondary %} secondary{% endif %}
+
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if params.l3.helper_addresses %}
+{% for helper_address in params.l3.helper_addresses %}
+ ip helper-address {{ helper_address }}
+{% endfor %}
+{% endif %}
+{% if params.l3.ospf_priority %}
+ ip ospf priority {{ params.l3.ospf_priority }}
+{% else %}
+{% endif %}
+
