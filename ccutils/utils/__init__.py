@@ -1,2 +1,1 @@
-from .CiscoRange import CiscoRange
-from .ConfigMigration import ConfigMigration
+from ccutils.utils.CiscoRange import CiscoRange
