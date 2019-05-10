@@ -190,4 +190,9 @@ class BaseConfigParser(object):
                 vrfs[vrf_name]["description"] = None
         return vrfs
 
+    @property
+    def static_routes(self):
+        # TODO: Add parsing for static routes
+        pass
+
 
