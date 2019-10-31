@@ -47,7 +47,7 @@ class BaseConfigLine(object):
 
     def re_search_children(self, regex, group=None):
         pattern = None
-        if not isinstance(regex, re._pattern_type):
+        if not isinstance(regex, re.Pattern):
             pattern = self._compile_regex(regex=regex)
         else:
             pattern = regex
@@ -62,7 +62,7 @@ class BaseConfigLine(object):
 
     def re_search(self, regex, group=None):
         pattern = None
-        if not isinstance(regex, re._pattern_type):
+        if not isinstance(regex, re.Pattern):
             pattern = self._compile_regex(regex=regex)
         else: 
             pattern = regex
@@ -103,7 +103,7 @@ class BaseConfigLine(object):
 
     def re_match(self, regex, group=None):
         pattern = None
-        if not isinstance(regex, re._pattern_type):
+        if not isinstance(regex, re.Pattern):
             pattern = self._compile_regex(regex=regex)
         else:
             pattern = regex

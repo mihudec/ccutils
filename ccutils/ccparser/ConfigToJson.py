@@ -81,6 +81,8 @@ class ConfigToJson:
                 self.data["interfaces"][interface_name]["l2"]["voice_vlan"] = interface.voice_vlan
 
     def parse_common(self):
+        # Get Hostname
+        self.data["hostname"] = self.config.hostname
         # Get Domain name
         self.data["domain_name"] = self.config.domain_name
         # Get Name-Servers
