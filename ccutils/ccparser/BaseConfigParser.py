@@ -246,12 +246,3 @@ class BaseConfigParser(object):
     def interface_lines(self):
         return (x for x in self.config_lines_obj if x.is_interface)
 
-
-if __name__ == '__main__':
-    path = pathlib.Path(r"C:\Users\mhudec\Documents\SecureCRT\Logs\10.3.0.2_10.3.0.2-1112.log")
-    parser = BaseConfigParser(config=path, verbosity=3)
-    print(parser.vrfs)
-    print(parser.vlans)
-    print(parser.vlan_groups)
-    for x in parser.config_lines_obj:
-        print(x.text, x.indent, x.type)
