@@ -35,6 +35,12 @@ class BaseInterfaceLine(BaseConfigLine):
     speed_regex = re.compile(pattern=r"^ speed (?P<speed>\d+)", flags=re.MULTILINE)
     duplex_regex = re.compile(pattern=r"^ duplex (?P<duplex>full|half)", flags=re.MULTILINE)
 
+    bandwidth_regex = re.compile(pattern=r"^ bandwidth (?P<bandwidth>\d+)", flags=re.MULTILINE)
+    delay_regex = re.compile(pattern=r"^ delay (?P<delay>\d+)", flags=re.MULTILINE)
+    mtu_regex = re.compile(pattern=r"^ mtu (?P<mtu>\d+)", flags=re.MULTILINE)
+
+    interface_service_policy_regex = re.compile(pattern=r"^\sservice-policy\s(?P<direction>input|output)\s(?P<policy_map>\S+)", flags=re.MULTILINE)
+
     def __init__(self, number, text, config, verbosity):
         super(BaseInterfaceLine, self).__init__(number=number, text=text, config=config, verbosity=verbosity)
         self.logger = get_logger(name="BaseInterfaceLine", verbosity=verbosity)
@@ -226,12 +232,11 @@ class BaseInterfaceLine(BaseConfigLine):
 
     @property
     def trunk_allowed_vlans(self):
-        
         candidates = self.re_search_children(regex=self.trunk_allowed_vlans_regex, group="allowed_vlans")
         if len(candidates):
             candidates = ",".join(candidates)
             crange = CiscoRange(text=candidates)
-            return crange.compressed_list
+            return crange._list
         else:
             return None
         
@@ -274,6 +279,42 @@ class BaseInterfaceLine(BaseConfigLine):
         if len(candidates):
             duplex = candidates[0]
         return duplex
+
+    @property
+    def bandwidth(self):
+        bandwith = None
+        candidates = self.re_search_children(regex=self.bandwidth_regex, group="bandwidth")
+        if len(candidates):
+            bandwith = candidates[0]
+        return bandwith
+
+    @property
+    def delay(self):
+        delay = None
+        candidates = self.re_search_children(regex=self.delay_regex, group="delay")
+        if len(candidates):
+            delay = candidates[0]
+        return delay
+
+    @property
+    def mtu(self):
+        mtu = None
+        candidates = self.re_search_children(regex=self.mtu_regex, group="mtu")
+        if len(candidates):
+            mtu = candidates[0]
+        return mtu
+
+    @property
+    def service_policy(self):
+        service_policy = {"input": None, "output": None}
+        candidates = self.re_search_children(regex=self.interface_service_policy_regex, group="ALL")
+        for candidate in candidates:
+            if candidate["direction"] == "input":
+                service_policy["input"] = candidate["policy_map"]
+            elif candidate["direction"] == "output":
+                service_policy["output"] = candidate["policy_map"]
+        print(candidates)
+        return service_policy
 
     def __str__(self):
         return "[BaseInterfaceLine #{} ({}): '{}']".format(self.number, self.type, self.text)

@@ -1,4 +1,5 @@
 import pathlib
+import os
 import re
 import json
 import timeit
@@ -9,16 +10,49 @@ from ccutils.ccparser import BaseInterfaceLine
 
 class BaseConfigParser(object):
 
-    def __init__(self, filepath, verbosity=1):
+    def __init__(self, config=None, verbosity=1, **kwargs):
         self.verbosity = verbosity
         self.logger = get_logger(name="ConfigParser", verbosity=verbosity)
-        self.path = self._check_path(filepath=filepath)
+        self.config = config
+        self.path = self._check_path(kwargs.get("filepath", None)) if kwargs.get("filepath", None) else None
         self.config_lines_str = []
         self.config_lines_obj = []
+        self.parse()
 
-        self._get_clean_config()
-        self._create_cfg_line_objects()
-        
+    def parse(self):
+        if self.config:
+            config_lines = []
+            # Determine Config Type
+            if isinstance(self.config, list):
+                self.logger.debug(msg="Treating config as list of config lines.")
+                config_lines = self.config
+            elif isinstance(self.config, str):
+                path = None
+                if os.path.exists(self.config):
+                    path = pathlib.Path(self.config)
+                if path and path.exists():
+                    self.logger.debug(msg="Treating config as filepath.")
+                    path = self._check_path(filepath=path)
+                    if path:
+                        config_lines = path.read_text().split("\n")
+                else:
+                    self.logger.debug(msg="Treating config as multi-line string.")
+                    config_lines = self.config.split("\n")
+            elif isinstance(self.config, pathlib.Path):
+                self.logger.debug(msg="Treating config as pathlib Path.")
+                path = self._check_path(filepath=self.config)
+                if path:
+                    config_lines = path.read_text().split("\n")
+            else:
+                self.logger.error("Invalid value passed as config argument.")
+                raise ValueError("Invalid value passed as config argument.")
+            self.config_lines_str = config_lines
+            self.fix_indents()
+            self._create_cfg_line_objects()
+        else:
+            self._get_clean_config()
+            self.fix_indents()
+            self._create_cfg_line_objects()
 
     def _check_path(self, filepath):
         path = None
@@ -43,6 +77,8 @@ class BaseConfigParser(object):
         indent_size = len(line) - len(line.lstrip(" "))
         return indent_size
 
+
+
     def _get_clean_config(self, first_line_regex=r"^version \d+\.\d+", last_line_regex=r"^end"):
         first_regex = re.compile(pattern=first_line_regex, flags=re.MULTILINE)
         last_regex = re.compile(pattern=last_line_regex, flags=re.MULTILINE)
@@ -66,10 +102,12 @@ class BaseConfigParser(object):
             self.config_lines_str = all_lines[first:last + 1]
             self.logger.info(msg="Loading {} config lines.".format(len(self.config_lines_str)))
         # Fix indent
+
+    def fix_indents(self):
         indent_map = list(map(self._get_indent, self.config_lines_str))
         fixed_indent_map = []
         for i in range(len(indent_map)):
-            if indent_map[i] == 0:
+            if i == 0:
                 fixed_indent_map.append(0)
                 continue
             if indent_map[i] == indent_map[i-1]:
@@ -103,7 +141,7 @@ class BaseConfigParser(object):
 
     def find_objects(self, regex, flags=re.MULTILINE):
         pattern = None
-        if not isinstance(regex, re._pattern_type):
+        if not isinstance(regex, re.Pattern):
             pattern = self._compile_regex(regex=regex, flags=flags)
         else:
             pattern = regex
@@ -114,8 +152,8 @@ class BaseConfigParser(object):
         self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
         return results
 
-
-    def get_hostname(self):
+    @property
+    def hostname(self):
         hostname = None
         regex = r"^hostname\s(\S+)"
         candidates = self.find_objects(regex=regex)
@@ -194,5 +232,9 @@ class BaseConfigParser(object):
     def static_routes(self):
         # TODO: Add parsing for static routes
         pass
+
+    @property
+    def interface_lines(self):
+        return (x for x in self.config_lines_obj if x.is_interface)
 
 
