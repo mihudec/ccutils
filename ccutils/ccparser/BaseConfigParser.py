@@ -110,6 +110,9 @@ class BaseConfigParser(object):
             if i == 0:
                 fixed_indent_map.append(0)
                 continue
+            if indent_map[i] == 0:
+                fixed_indent_map.append(0)
+                continue
             if indent_map[i] == indent_map[i-1]:
                 fixed_indent_map.append(fixed_indent_map[-1])
             elif indent_map[i] > indent_map[i-1]:
@@ -167,7 +170,7 @@ class BaseConfigParser(object):
             return False
         else:
             return True
-    
+
     @property
     def domain_name(self):
         domain_name = None
@@ -176,7 +179,7 @@ class BaseConfigParser(object):
         if len(candidates):
             domain_name = candidates[0].re_search(regex=domain_name_regex, group="domain_name")
         return domain_name
-    
+
     @property
     def name_servers(self):
         name_servers = []
@@ -202,6 +205,12 @@ class BaseConfigParser(object):
         return vlans
 
     @property
+    def vlan_groups(self):
+        vlan_group_regex = re.compile(pattern=r"^vlan group (?P<group>\S+) vlan-list (?P<vlan_id>\d+)", flags=re.MULTILINE)
+        candidates = self.find_objects(regex=vlan_group_regex)
+        return [x.re_search(regex=vlan_group_regex, group="ALL") for x in candidates]
+
+    @property
     def vrfs(self):
         vrfs = None
         vrf_name_regex = re.compile(pattern=r"^(?:ip )?vrf(?: definition)? (?P<vrf_name>\S+)", flags=re.MULTILINE)
@@ -224,7 +233,7 @@ class BaseConfigParser(object):
             description_candidates = candidate.re_search_children(regex=description_regex, group="description")
             if len(description_candidates):
                 vrfs[vrf_name]["description"] = description_candidates[0]
-            else: 
+            else:
                 vrfs[vrf_name]["description"] = None
         return vrfs
 
@@ -238,3 +247,11 @@ class BaseConfigParser(object):
         return (x for x in self.config_lines_obj if x.is_interface)
 
 
+if __name__ == '__main__':
+    path = pathlib.Path(r"C:\Users\mhudec\Documents\SecureCRT\Logs\10.3.0.2_10.3.0.2-1112.log")
+    parser = BaseConfigParser(config=path, verbosity=3)
+    print(parser.vrfs)
+    print(parser.vlans)
+    print(parser.vlan_groups)
+    for x in parser.config_lines_obj:
+        print(x.text, x.indent, x.type)
