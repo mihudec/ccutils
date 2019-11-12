@@ -196,27 +196,3 @@ class ConfigMigration:
             json.dump(obj=vrfs, fp=f, indent=2)
         return vrfs
 
-
-
-
-if __name__ == "__main__":
-    cm = ConfigMigration(
-        hostname="NUB-SW-COR-001", 
-        excel_path=r"C:\Users\mhudec\CloudStation\Work\ALEF\MHMP\MHMP_Migrations\EXCEL\NUB_6500_Ports.xlsx", 
-        excel_sheet="Port Mappings",
-        old_config_folder=r"C:\Users\mhudec\CloudStation\Work\ALEF\MHMP\MHMP_Migrations\CONFIG\OLD\NUB",
-        verbosity=2
-    )
-    #cm.check_standby()
-    #cm.merge_vrfs()
-    #cm.get_interface_mapping()
-    for interface in filter(lambda x: bool(cm.old_ctj["gw1-serv"].data["interfaces"][x]["channel_group"]), cm.old_ctj["gw1-serv"].data["interfaces"].keys()):
-        new_interface = cm.get_new_interface(old_host="gw1-serv", old_interface=interface)
-        if new_interface:
-            print(interface, cm.old_ctj["gw1-serv"].data["interfaces"][interface]["channel_group"]["channel_group_number"])
-            print(cm.get_context_for_new_interface(cm.get_new_interface(old_host="gw1-serv", old_interface=interface))["channel_group"]["channel_group_number"])
-
-   
-    
-            
-    
