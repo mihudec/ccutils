@@ -192,7 +192,5 @@ class ConfigMigration:
                             result = self.user_selection(prompt="Found two diffenet descriptions for same VRF {}: {}:\n".format(vrf, options), options=options)
                             vrfs[vrf]["description"] = result
 
-        with pathlib.Path(r"C:\Users\mhudec\CloudStation\Work\ALEF\MHMP\MHMP_Migrations\CONFIG\NEW\6500\vrfs.json").open(mode="w") as f:
-            json.dump(obj=vrfs, fp=f, indent=2)
         return vrfs
 
