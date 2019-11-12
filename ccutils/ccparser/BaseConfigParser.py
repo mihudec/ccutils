@@ -9,17 +9,32 @@ from ccutils.ccparser import BaseInterfaceLine
 
 
 class BaseConfigParser(object):
+    """
+    Base Configuration Parser object used for loading configuration files.
+    """
 
     def __init__(self, config=None, verbosity=1, **kwargs):
+        """
+
+        :param config: ``pathlib.Path`` object pointing to a config file, or string representing either path to file of configuration itself. List of config lines is also supported.
+        :param int verbosity: Determines logging level
+        :param kwargs:
+        """
         self.verbosity = verbosity
         self.logger = get_logger(name="ConfigParser", verbosity=verbosity)
         self.config = config
         self.path = self._check_path(kwargs.get("filepath", None)) if kwargs.get("filepath", None) else None
+        #: This is a URI.
         self.config_lines_str = []
         self.config_lines_obj = []
         self.parse()
 
     def parse(self):
+        """
+        Entry function which triggers the parsing process. Called automatically when instantiating the object.
+
+        :return: ``None``
+        """
         if self.config:
             config_lines = []
             # Determine Config Type
@@ -77,8 +92,6 @@ class BaseConfigParser(object):
         indent_size = len(line) - len(line.lstrip(" "))
         return indent_size
 
-
-
     def _get_clean_config(self, first_line_regex=r"^version \d+\.\d+", last_line_regex=r"^end"):
         first_regex = re.compile(pattern=first_line_regex, flags=re.MULTILINE)
         last_regex = re.compile(pattern=last_line_regex, flags=re.MULTILINE)
@@ -104,6 +117,11 @@ class BaseConfigParser(object):
         # Fix indent
 
     def fix_indents(self):
+        """
+        Function for fixing the indentation level of config lines.
+
+        :return:
+        """
         indent_map = list(map(self._get_indent, self.config_lines_str))
         fixed_indent_map = []
         for i in range(len(indent_map)):
@@ -124,6 +142,11 @@ class BaseConfigParser(object):
             #print(val, "'{}'".format(self.config_lines_str[i]))
 
     def _create_cfg_line_objects(self):
+        """
+        Function for generating ``self.config_lines_obj``.
+
+        :return:
+        """
         start = timeit.default_timer()
         for number, text in enumerate(self.config_lines_str):
             if re.match(pattern=r"^interface\s\S+", string=text, flags=re.MULTILINE):
@@ -135,6 +158,13 @@ class BaseConfigParser(object):
         self.logger.debug(msg="Created {} ConfigLine objects in {} ms.".format(len(self.config_lines_obj), (timeit.default_timer()-start)*1000))
 
     def _compile_regex(self, regex, flags=re.MULTILINE):
+        """
+        Helper function for compiling `re` patterns from string.
+
+        :param str regex: Regex string
+        :param flags: Flags for regex pattern, default is re.MULTILINE
+        :return:
+        """
         pattern = None
         try:
             pattern = re.compile(pattern=regex, flags=flags)
@@ -143,6 +173,30 @@ class BaseConfigParser(object):
         return pattern
 
     def find_objects(self, regex, flags=re.MULTILINE):
+        """
+        Function for filtering Config Lines Objects based on given regex.
+
+        :param regex:
+        :param flags:
+        :return: List of ``BaseConfigLine`` objects. :ref:`See Here<base-config-line>`
+
+        **Example:**
+
+        .. highlight:: python
+        .. code-block:: python
+
+            # Initialize the object
+            parser = BaseConfigParser(config="/path/to/config_file.cfg")
+
+            # Define regex for matching config lines
+            interface_regex = r"^ interface"
+
+            # Apply the filter
+            interface_lines = parser.find_objects(regex=interface_regex)
+
+            # Returns subset of ``self.config_lines_obj`` which match specified regex
+
+        """
         pattern = None
         if not isinstance(regex, re.Pattern):
             pattern = self._compile_regex(regex=regex, flags=flags)
