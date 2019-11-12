@@ -4,15 +4,22 @@ import json
 import timeit
 from ccutils.utils.common_utils import get_logger
 
+
 class BaseConfigLine(object):
     parent_indent_regex = re.compile(pattern=r"[^! ]", flags=re.MULTILINE)
     child_indent_regex = re.compile(pattern=r"^ \S", flags=re.MULTILINE)
     grandchild_indent_regex = re.compile(pattern=r"^  \S", flags=re.MULTILINE)
     comment_regex = re.compile(pattern=r"^(\s+)?!", flags=re.MULTILINE)
     interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
-    
 
     def __init__(self, number, text, config, verbosity):
+        """
+
+        :param int number: Index of line in config
+        :param str text: Text of the config line
+        :param config: Reference to the parent BaseConfigParser object
+        :param verbosity:
+        """
         self.logger = get_logger(name="BaseConfigLine", verbosity=verbosity)
         #print(self.logger.handlers)
         self.config = config

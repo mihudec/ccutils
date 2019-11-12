@@ -107,7 +107,7 @@ class BaseConfigParser(object):
         indent_map = list(map(self._get_indent, self.config_lines_str))
         fixed_indent_map = []
         for i in range(len(indent_map)):
-            if indent_map[i] == 0:
+            if i == 0:
                 fixed_indent_map.append(0)
                 continue
             if indent_map[i] == indent_map[i-1]:
