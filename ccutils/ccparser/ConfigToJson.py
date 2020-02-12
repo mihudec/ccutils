@@ -4,8 +4,17 @@ import re
 import json
 import pathlib
 
+
 class ConfigToJson:
+    """
+
+    """
     def __init__(self, config, verbosity=1):
+        """
+
+        :param config: Reference to the parent BaseConfigParser object
+        :param int verbosity: Logging output level
+        """
         self.config = config
         self.logger = get_logger(name="CTJ", verbosity=verbosity)
         self.data = {
@@ -15,6 +24,10 @@ class ConfigToJson:
         self.parse_common()
 
     def parse_interfaces(self):
+        """
+
+        :return:
+        """
         interface_lines = list(filter(lambda x: "interface" in x.type, self.config.config_lines_obj))
         self.logger.debug(msg="Loaded {} interface lines.".format(len(interface_lines)))
         for interface in interface_lines:

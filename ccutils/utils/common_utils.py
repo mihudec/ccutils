@@ -2,7 +2,6 @@ import json
 import pathlib
 import logging
 import sys
-import pandas as pd
 import re
 
 
@@ -78,17 +77,27 @@ def check_path(path, create=False):
                         return_path = path
     return return_path
 
+
 def jprint(data, indent=2):
     print(json.dumps(obj=data, indent=indent))
 
+
 def load_excel_sheet(file, sheet_name):
-    file = check_path(file)
-    if not file:
+    try:
+        import pandas as pd
+    except ImportError:
+        print("To use 'load_excel_sheet' function you need to have 'pandas' installed.")
+        pd = None
+    if pd:
+        file = check_path(file)
+        if not file:
+            return None
+        df = pd.read_excel(io=file, sheet_name=sheet_name)
+        df = df.where((pd.notnull(df)), None)
+        data = {}
+        for column in df.columns:
+            data[column] = list(df[column])
+        return data
+    else:
         return None
-    df = pd.read_excel(io=file, sheet_name=sheet_name)
-    df = df.where((pd.notnull(df)), None)
-    data = {}
-    for column in df.columns:
-        data[column] = list(df[column])
-    return data
 

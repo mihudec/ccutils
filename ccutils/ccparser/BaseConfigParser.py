@@ -13,6 +13,8 @@ class BaseConfigParser(object):
     Base Configuration Parser object used for loading configuration files.
     """
 
+    PATTERN_TYPE = type(re.compile(pattern=""))
+
     def __init__(self, config=None, verbosity=1, **kwargs):
         """
 
@@ -198,7 +200,7 @@ class BaseConfigParser(object):
 
         """
         pattern = None
-        if not isinstance(regex, re.Pattern):
+        if not isinstance(regex, self.PATTERN_TYPE):
             pattern = self._compile_regex(regex=regex, flags=flags)
         else:
             pattern = regex

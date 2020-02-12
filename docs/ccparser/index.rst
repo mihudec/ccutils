@@ -37,7 +37,6 @@ BaseInterfaceLine
 
 ..  autoclass:: ccutils.ccparser.BaseInterfaceLine
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

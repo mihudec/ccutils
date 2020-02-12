@@ -6,6 +6,8 @@ from ccutils.utils.common_utils import get_logger
 
 
 class BaseConfigLine(object):
+
+    PATTERN_TYPE = type(re.compile(pattern=""))
     parent_indent_regex = re.compile(pattern=r"[^! ]", flags=re.MULTILINE)
     child_indent_regex = re.compile(pattern=r"^ \S", flags=re.MULTILINE)
     grandchild_indent_regex = re.compile(pattern=r"^  \S", flags=re.MULTILINE)
@@ -18,7 +20,7 @@ class BaseConfigLine(object):
         :param int number: Index of line in config
         :param str text: Text of the config line
         :param config: Reference to the parent BaseConfigParser object
-        :param verbosity:
+        :param int verbosity: Logging output level
         """
         self.logger = get_logger(name="BaseConfigLine", verbosity=verbosity)
         #print(self.logger.handlers)
@@ -54,7 +56,7 @@ class BaseConfigLine(object):
 
     def re_search_children(self, regex, group=None):
         pattern = None
-        if not isinstance(regex, re.Pattern):
+        if not isinstance(regex, self.PATTERN_TYPE):
             pattern = self._compile_regex(regex=regex)
         else:
             pattern = regex
@@ -69,7 +71,7 @@ class BaseConfigLine(object):
 
     def re_search(self, regex, group=None):
         pattern = None
-        if not isinstance(regex, re.Pattern):
+        if not isinstance(regex, self.PATTERN_TYPE):
             pattern = self._compile_regex(regex=regex)
         else: 
             pattern = regex
@@ -106,11 +108,9 @@ class BaseConfigLine(object):
             self.logger.info(msg="Given regex '{}' did not match.".format(regex))
             return None
 
-        
-
     def re_match(self, regex, group=None):
         pattern = None
-        if not isinstance(regex, re.Pattern):
+        if not isinstance(regex, self.PATTERN_TYPE):
             pattern = self._compile_regex(regex=regex)
         else:
             pattern = regex
