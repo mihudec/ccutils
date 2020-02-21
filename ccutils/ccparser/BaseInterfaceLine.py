@@ -1,7 +1,7 @@
 
 from ccutils.ccparser import BaseConfigLine
 from ccutils.utils import CiscoRange
-from ccutils.utils.common_utils import get_logger
+from ccutils.utils.common_utils import get_logger, split_interface_name
 import re
 
 
@@ -41,8 +41,16 @@ class BaseInterfaceLine(BaseConfigLine):
     _bandwidth_regex = re.compile(pattern=r"^ bandwidth (?P<bandwidth>\d+)", flags=re.MULTILINE)
     _delay_regex = re.compile(pattern=r"^ delay (?P<delay>\d+)", flags=re.MULTILINE)
     _mtu_regex = re.compile(pattern=r"^ mtu (?P<mtu>\d+)", flags=re.MULTILINE)
+    _ip_mtu_regex = re.compile(pattern=r"^ ip mtu (?P<ip_mtu>\d+)", flags=re.MULTILINE)
+    _ip_tcp_mss_regex = re.compile(pattern=r"^ ip tcp adjust-mss (?P<tcp_mss>\d+)", flags=re.MULTILINE)
+    _keepalive_regex = re.compile(pattern=r"^ keepalive (?P<period>\d+) (?P<retries>\d+)")
 
-    _interface_service_policy_regex = re.compile(pattern=r"^\sservice-policy\s(?P<direction>input|output)\s(?P<policy_map>\S+)", flags=re.MULTILINE)
+    _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<policy_map>\S+)", flags=re.MULTILINE)
+    _tunnel_src_regex = re.compile(pattern=r"^ tunnel source (?P<source>\S+)")
+    _tunnel_dest_regex = re.compile(pattern=r"^ tunnel destination (?P<destination>\S+)")
+    _tunnel_vrf_regex = re.compile(pattern=r"^ tunnel vrf (?P<vrf>\S+)")
+    _tunnel_mode_regex = re.compile(pattern=r"^ tunnel mode (?P<mode>.*?)$")
+    _tunnel_ipsec_profile_regex = re.compile(pattern=r"^ tunnel protection ipsec profile (?P<ipsec_profile>\S+)")
 
     def __init__(self, number, text, config, verbosity):
         """
@@ -82,7 +90,18 @@ class BaseInterfaceLine(BaseConfigLine):
             self._channel_group_regex,
             self._speed_regex,
             self._duplex_regex,
-            self._interface_service_policy_regex,
+            self._bandwidth_regex,
+            self._delay_regex,
+            self._mtu_regex,
+            self._ip_mtu_regex,
+            self._ip_tcp_mss_regex,
+            self._keepalive_regex,
+            self._service_policy_regex,
+            self._tunnel_src_regex,
+            self._tunnel_dest_regex,
+            self._tunnel_vrf_regex,
+            self._tunnel_mode_regex,
+            self._tunnel_ipsec_profile_regex,
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
             re.compile(pattern=r"^ spanning-tree portfast")
@@ -99,6 +118,21 @@ class BaseInterfaceLine(BaseConfigLine):
         else:
             entry[key] = False
         return entry
+
+    @property
+    def flags(self):
+        flags = []
+        flags.append(self.port_mode)
+        interface = split_interface_name(self.interface_name)
+        if "Vlan" in interface[0]:
+            flags.append("svi")
+        elif "Ethernet" in interface[0]:
+            flags.append("physical")
+        elif "Port-channel" in interface[0]:
+            flags.append("port-channel")
+        elif "Tunnel" in interface[0]:
+            flags.append("tunnel")
+        return flags
 
     @property
     def interface_name(self):
@@ -323,13 +357,37 @@ class BaseInterfaceLine(BaseConfigLine):
         mtu = None
         candidates = self.re_search_children(regex=self._mtu_regex, group="mtu")
         if len(candidates):
-            mtu = candidates[0]
+            mtu = int(candidates[0])
         return mtu
+
+    @property
+    def ip_mtu(self):
+        ip_mtu = None
+        candidates = self.re_search_children(regex=self._ip_mtu_regex, group="ip_mtu")
+        if len(candidates):
+            ip_mtu = int(candidates[0])
+        return ip_mtu
+
+    @property
+    def tcp_mss(self):
+        tcp_mss = None
+        candidates = self.re_search_children(regex=self._ip_tcp_mss_regex, group="tcp_mss")
+        if len(candidates):
+            tcp_mss = int(candidates[0])
+        return tcp_mss
+
+    @property
+    def keepalive(self):
+        keepalive = None
+        candidates = self.re_search_children(regex=self._keepalive_regex, group="ALL")
+        if len(candidates):
+            keepalive = {k: int(v) for k, v in candidates[0].items()}
+        return keepalive
 
     @property
     def service_policy(self):
         service_policy = {"input": None, "output": None}
-        candidates = self.re_search_children(regex=self._interface_service_policy_regex, group="ALL")
+        candidates = self.re_search_children(regex=self._service_policy_regex, group="ALL")
         for candidate in candidates:
             if candidate["direction"] == "input":
                 service_policy["input"] = candidate["policy_map"]
@@ -337,6 +395,25 @@ class BaseInterfaceLine(BaseConfigLine):
                 service_policy["output"] = candidate["policy_map"]
         print(candidates)
         return service_policy
+
+    @property
+    def tunnel_properties(self):
+        # Check if interface is a Tunnel
+        if not re.match(pattern=r"^Tu", string=self.interface_name):
+            return None
+        else:
+            tunnel_properties = {}
+            tunnel_src_candidates = self.re_search_children(regex=self._tunnel_src_regex, group="source")
+            tunnel_dest_candidates = self.re_search_children(regex=self._tunnel_dest_regex, group="destination")
+            tunnel_vrf_candidates = self.re_search_children(regex=self._tunnel_vrf_regex, group="vrf")
+            tunnel_mode_candidates = self.re_search_children(regex=self._tunnel_mode_regex, group="mode")
+            tunnel_ipsec_profile_candidates = self.re_search_children(regex=self._tunnel_ipsec_profile_regex, group="ipsec_profile")
+            tunnel_properties["source"] = tunnel_src_candidates[0] if tunnel_src_candidates else None
+            tunnel_properties["destination"] = tunnel_dest_candidates[0] if tunnel_dest_candidates else None
+            tunnel_properties["vrf"] = tunnel_vrf_candidates[0] if tunnel_vrf_candidates else None
+            tunnel_properties["mode"] = tunnel_mode_candidates[0] if tunnel_mode_candidates else None
+            tunnel_properties["ipsec_profile"] = tunnel_ipsec_profile_candidates[0] if tunnel_ipsec_profile_candidates else None
+            return tunnel_properties
 
     def __str__(self):
         return "[BaseInterfaceLine #{} ({}): '{}']".format(self.number, self.type, self.text)

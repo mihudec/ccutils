@@ -33,14 +33,8 @@ class ConfigToJson:
         for interface in interface_lines:
             interface_name = interface.interface_name
             port_mode = interface.port_mode
-
-            self.data["interfaces"][interface_name] = {"flags": [port_mode], "description": interface.interface_description, "unprocessed_lines": interface.get_unprocessed(return_type="text")}
-            if "Vlan" in interface_name:
-                self.data["interfaces"][interface_name]["flags"].append("svi")
-            elif "Ethernet" in interface_name:
-                self.data["interfaces"][interface_name]["flags"].append("physical")
-            elif "Port-channel" in interface_name:
-                self.data["interfaces"][interface_name]["flags"].append("port-channel")
+            flags = interface.flags
+            self.data["interfaces"][interface_name] = {"flags": flags, "description": interface.interface_description, "unprocessed_lines": interface.get_unprocessed(return_type="text")}
 
             # Get Shutdown State
             self.data["interfaces"][interface_name]["shutdown"] = interface.shutdown
@@ -92,6 +86,9 @@ class ConfigToJson:
                 self.data["interfaces"][interface_name]["l2"]["access_vlan"] = interface.access_vlan
                 # Get Voice VLAN
                 self.data["interfaces"][interface_name]["l2"]["voice_vlan"] = interface.voice_vlan
+
+            if "tunnel" in flags:
+                self.data["interfaces"][interface_name]["tunnel"] = interface.tunnel_properties
 
     def parse_common(self):
         # Get Hostname

@@ -1,0 +1,15 @@
+interface Tunnel0
+ description Test-Tunnel0
+ ip address 10.10.10.2 255.255.255.252
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+ keepalive 1 3
+ tunnel source Loopback0
+ tunnel mode ipsec ipv4
+ tunnel destination 1.2.3.4
+ tunnel vrf PROVIDER
+ tunnel protection ipsec profile IPSEC-PROFILE
+!
+interface Tunnel1
+ description Test-Tunnel1
+!

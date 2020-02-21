@@ -1,0 +1,80 @@
+import unittest
+import pathlib
+from ccutils.ccparser import BaseConfigParser
+
+
+class TestL3Interface(unittest.TestCase):
+    test_file_path = pathlib.Path("./resources/interface_tunnel_test.txt")
+    config = BaseConfigParser(config=test_file_path)
+
+    def test_keepalive(self):
+        wanted_results = {
+            "Tunnel0": {
+                "period": 1,
+                "retries": 3
+            },
+            "Tunnel1": None
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                result = interface_line.keepalive
+                self.assertEqual(wanted_results[interface], result)
+
+    def test_tcp_mss(self):
+        wanted_results = {
+            "Tunnel0": 1360,
+            "Tunnel1": None
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                result = interface_line.tcp_mss
+                self.assertEqual(wanted_results[interface], result)
+
+    def test_ip_mtu(self):
+        wanted_results = {
+            "Tunnel0": 1400,
+            "Tunnel1": None
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                result = interface_line.ip_mtu
+                self.assertEqual(wanted_results[interface], result)
+
+
+class TestTunnelInterface(unittest.TestCase):
+    test_file_path = pathlib.Path("./resources/interface_tunnel_test.txt")
+    config = BaseConfigParser(config=test_file_path)
+
+    def test_interface_tunnel_properties_1(self):
+        wanted_results = {
+            "Tunnel0": {
+                "source": "Loopback0",
+                "destination": "1.2.3.4",
+                "vrf": "PROVIDER",
+                "mode": "ipsec ipv4",
+                "ipsec_profile": "IPSEC-PROFILE"
+            },
+            "Tunnel1": {
+                "source": None,
+                "destination": None,
+                "vrf": None,
+                "mode": None,
+                "ipsec_profile": None
+            }
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                result = interface_line.tunnel_properties
+                self.assertEqual(wanted_results[interface], result)
+
+
+if __name__ == '__main__':
+    unittest.main()
