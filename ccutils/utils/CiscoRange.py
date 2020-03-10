@@ -5,15 +5,19 @@ from ccutils.utils.common_utils import get_logger
 import json
 
 class CiscoRange(MutableSequence):
-    
-    PREFIX_REGEX = re.compile(pattern=r"^[A-z]{2,}")
+
+    # TODO: Remove
+    #PREFIX_REGEX = re.compile(pattern=r"^[A-z]{2,}")
+    PREFIX_REGEX = re.compile(pattern=r"^[A-z\-]+(?=\d)", flags=re.MULTILINE)
     SUFFIX_REGEX = re.compile(pattern=r"\d+(?:\/\d+)*(?:\s*-\s*\d+)*")
     RANGE_REGEX = re.compile(pattern=r"\d+\s*-\s*\d+")
-    PREFIX_SLOT_REGEX = re.compile(pattern=r"(?P<prefix_slot>[A-z]{2,}(?:\d+/)*)(?P<number>\d+)")
+    # TODO: Remove
+    #PREFIX_SLOT_REGEX = re.compile(pattern=r"(?P<prefix_slot>[A-z]{2,}(?:\d+/)*)(?P<number>\d+)")
+    PREFIX_SLOT_REGEX = re.compile(pattern=r"(?P<prefix_slot>^[A-z\-]+(?=\d)(?:\d+/)*)(?P<number>\d+)", flags=re.MULTILINE)
 
-    def __init__(self, text):
+    def __init__(self, text, verbosity=3):
         super(CiscoRange, self).__init__()
-        self.logger = get_logger(name="CiscoRange", verbosity=1)
+        self.logger = get_logger(name="CiscoRange", verbosity=verbosity)
         self.text = text
         self._list = self.sort_list(data=self.split_to_list(data=self.text))
         self.compressed_list = self.compress_list(data=self._list)
@@ -165,7 +169,7 @@ class CiscoRange(MutableSequence):
             self.logger.debug(msg="TempList: {}".format(temp_list))
             suffix_lengths = []
             for item in temp_list:
-                if len(item[1]) not in  suffix_lengths:
+                if len(item[1]) not in suffix_lengths:
                     suffix_lengths.append(len(item[1]))
             suffix_lengths.sort()
             # Get items with same suffix length

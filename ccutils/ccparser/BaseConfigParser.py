@@ -15,7 +15,7 @@ class BaseConfigParser(object):
 
     PATTERN_TYPE = type(re.compile(pattern=""))
 
-    def __init__(self, config=None, verbosity=1, **kwargs):
+    def __init__(self, config=None, verbosity=4, **kwargs):
         """
 
         :param config: ``pathlib.Path`` object pointing to a config file, or string representing either path to file of configuration itself. List of config lines is also supported.

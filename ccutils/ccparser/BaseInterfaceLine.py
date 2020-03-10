@@ -46,13 +46,16 @@ class BaseInterfaceLine(BaseConfigLine):
     _keepalive_regex = re.compile(pattern=r"^ keepalive (?P<period>\d+) (?P<retries>\d+)")
 
     _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<policy_map>\S+)", flags=re.MULTILINE)
-    _tunnel_src_regex = re.compile(pattern=r"^ tunnel source (?P<source>\S+)")
-    _tunnel_dest_regex = re.compile(pattern=r"^ tunnel destination (?P<destination>\S+)")
-    _tunnel_vrf_regex = re.compile(pattern=r"^ tunnel vrf (?P<vrf>\S+)")
-    _tunnel_mode_regex = re.compile(pattern=r"^ tunnel mode (?P<mode>.*?)$")
-    _tunnel_ipsec_profile_regex = re.compile(pattern=r"^ tunnel protection ipsec profile (?P<ipsec_profile>\S+)")
+    _tunnel_src_regex = re.compile(pattern=r"^ tunnel source (?P<source>\S+)", flags=re.MULTILINE)
+    _tunnel_dest_regex = re.compile(pattern=r"^ tunnel destination (?P<destination>\S+)", flags=re.MULTILINE)
+    _tunnel_vrf_regex = re.compile(pattern=r"^ tunnel vrf (?P<vrf>\S+)", flags=re.MULTILINE)
+    _tunnel_mode_regex = re.compile(pattern=r"^ tunnel mode (?P<mode>.*?)$", flags=re.MULTILINE)
+    _tunnel_ipsec_profile_regex = re.compile(pattern=r"^ tunnel protection ipsec profile (?P<ipsec_profile>\S+)", flags=re.MULTILINE)
 
-    def __init__(self, number, text, config, verbosity):
+    _storm_control_threshold_regex = re.compile(pattern=r"^ storm-control (?P<traffic>broadcast|multicast) level (?:(?P<type>bps|pps) )?(?P<raising>\d{1,3}(?:\.\d{1,2})?(?:k|m|g)?)(?: (?P<falling>\d{1,3}(?:\.\d{1,2})?(?:k|m|g)?))?", flags=re.MULTILINE)
+    _storm_control_action_regex = re.compile(pattern=r"^ storm-control action (?P<action>trap|shutdown)")
+
+    def __init__(self, number, text, config, verbosity=3):
         """
 
         :param int number: Index of line in config
@@ -102,6 +105,8 @@ class BaseInterfaceLine(BaseConfigLine):
             self._tunnel_vrf_regex,
             self._tunnel_mode_regex,
             self._tunnel_ipsec_profile_regex,
+            self._storm_control_threshold_regex,
+            self._storm_control_action_regex,
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
             re.compile(pattern=r"^ spanning-tree portfast")
@@ -173,6 +178,17 @@ class BaseInterfaceLine(BaseConfigLine):
     
     @property 
     def ip_addresses(self):
+        """
+        Returns a list of IP addresses, each address is represented by dictionary,
+        such as `{"ip_address": "10.0.0.1", "mask": "255.255.255.0", "secondary: False"}`.
+
+        Example output: `[{"ip_address": "10.0.0.1", "mask": "255.255.255.0", "secondary: False"}]`
+
+        If there is no IP address present on the interface, an empty list is returned.
+
+        :rtype: list
+        :return: A list of dicts
+        """
         ip_addresses = []
         candidates = self.re_search_children(regex=self._ip_addr_regex)
         for candidate in candidates:
@@ -386,6 +402,14 @@ class BaseInterfaceLine(BaseConfigLine):
 
     @property
     def service_policy(self):
+        """
+        Returns dictionary such as `{"input": "policy_in", "output": "policy_out"}`
+
+        If there is not input or output service policy a default dict is returned: `{"input": None, "output": None}`
+
+        :rtype: dict
+        :return:
+        """
         service_policy = {"input": None, "output": None}
         candidates = self.re_search_children(regex=self._service_policy_regex, group="ALL")
         for candidate in candidates:
@@ -414,6 +438,19 @@ class BaseInterfaceLine(BaseConfigLine):
             tunnel_properties["mode"] = tunnel_mode_candidates[0] if tunnel_mode_candidates else None
             tunnel_properties["ipsec_profile"] = tunnel_ipsec_profile_candidates[0] if tunnel_ipsec_profile_candidates else None
             return tunnel_properties
+
+    @property
+    def storm_control(self):
+        threshold_candidates = self.re_search_children(regex=self._storm_control_threshold_regex, group="ALL")
+        action_candidates = self.re_search_children(regex=self._storm_control_action_regex, group="action")
+        if len(threshold_candidates) == 0 and len(action_candidates) == 0:
+            return None
+        storm_control = {"thresholds": None, "action": None}
+        if len(threshold_candidates):
+            storm_control["thresholds"] = threshold_candidates
+        if len(action_candidates):
+            storm_control["action"] = action_candidates[0]
+        return storm_control
 
     def __str__(self):
         return "[BaseInterfaceLine #{} ({}): '{}']".format(self.number, self.type, self.text)

@@ -1,0 +1,14 @@
+interface Ethernet0/0
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+ switchport trunk native vlan 10
+ switchport trunk allowed vlan 10,20
+ storm-control broadcast level 10.00
+ storm-control multicast level bps 1.5m 1m
+ storm-control action shutdown
+!
+interface Ethernet0/1
+ switchport mode access
+ switchport access vlan 10
+ switchport voice vlan 20
+!

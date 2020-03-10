@@ -1,0 +1,20 @@
+{
+  "Ethernet0/0": {
+    "thresholds": [
+      {
+        "traffic": "broadcast",
+        "type": null,
+        "raising": "10.00",
+        "falling": null
+      },
+      {
+        "traffic": "multicast",
+        "type": "bps",
+        "raising": "1.5m",
+        "falling": "1m"
+      }
+    ],
+    "action": "shutdown"
+  },
+  "Ethernet0/1": null
+}

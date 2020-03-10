@@ -1,0 +1,68 @@
+{
+  "interfaces": {
+    "Ethernet0/0": {
+      "flags": [
+        "l2",
+        "physical"
+      ],
+      "description": null,
+      "unprocessed_lines": [],
+      "shutdown": false,
+      "cdp": true,
+      "logging_events": [],
+      "channel_group": null,
+      "speed": null,
+      "duplex": null,
+      "l2": {
+        "native_vlan": 10,
+        "trunk_encapsulation": "dot1q",
+        "mode": "trunk",
+        "storm_control": {
+          "thresholds": [
+            {
+              "traffic": "broadcast",
+              "type": null,
+              "raising": "10.00",
+              "falling": null
+            },
+            {
+              "traffic": "multicast",
+              "type": "bps",
+              "raising": "1.5m",
+              "falling": "1m"
+            }
+          ],
+          "action": "shutdown"
+        }
+      }
+    },
+    "Ethernet0/1": {
+      "flags": [
+        "l2",
+        "physical"
+      ],
+      "description": null,
+      "unprocessed_lines": [],
+      "shutdown": false,
+      "cdp": true,
+      "logging_events": [],
+      "channel_group": null,
+      "speed": null,
+      "duplex": null,
+      "l2": {
+        "native_vlan": null,
+        "trunk_encapsulation": null,
+        "mode": "access",
+        "allowed_vlans": 10,
+        "access_vlan": 10,
+        "voice_vlan": 20
+      }
+    }
+  },
+  "hostname": null,
+  "domain_name": null,
+  "name_servers": [],
+  "cdp": true,
+  "vlans": {},
+  "vrfs": null
+}
