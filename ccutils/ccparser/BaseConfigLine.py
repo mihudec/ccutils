@@ -68,7 +68,6 @@ class BaseConfigLine(object):
             result = [x.re_search(regex=pattern, group=group) for x in result]
         return result
 
-
     def re_search(self, regex, group=None):
         pattern = None
         if not isinstance(regex, self.PATTERN_TYPE):

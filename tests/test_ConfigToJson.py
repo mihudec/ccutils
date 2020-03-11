@@ -6,9 +6,10 @@ from ccutils.ccparser import BaseConfigParser, ConfigToJson
 
 class TestConfigToJson(unittest.TestCase):
     test_file_path = pathlib.Path("./resources/interface_l2_test.txt")
-    config = BaseConfigParser(config=test_file_path, verbosity=1)
+    config = BaseConfigParser(config=test_file_path, verbosity=3)
 
     def test_config_to_json(self):
+        self.maxDiff = 5000
         wanted_results = {
             "interface_l2_test": {"omit_empty": True}
         }
@@ -16,9 +17,10 @@ class TestConfigToJson(unittest.TestCase):
             with self.subTest(msg=hostname):
                 config = BaseConfigParser(config=pathlib.Path("./resources/{}.txt".format(hostname)))
                 ctj = ConfigToJson(config=config, omit_empty=wanted_results[hostname]["omit_empty"], verbosity=3)
-                ctj.jprint(ctj.data)
+                print(ctj.to_json())
+                print(ctj.to_yaml())
                 result = json.loads(pathlib.Path("./results/{}.json".format(hostname)).read_text())
-                self.assertEqual(ctj.data, result)
+                self.assertDictEqual(ctj.data, result)
 
 if __name__ == '__main__':
     unittest.main()

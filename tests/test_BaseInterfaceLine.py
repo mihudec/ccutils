@@ -67,6 +67,7 @@ class TestL2Interface(unittest.TestCase):
                 result = interface_line.storm_control
                 self.assertEqual(wanted_results[interface], result)
 
+
 class TestL3Interface(unittest.TestCase):
     test_file_path = pathlib.Path("./resources/interface_tunnel_test.txt")
     config = BaseConfigParser(config=test_file_path)

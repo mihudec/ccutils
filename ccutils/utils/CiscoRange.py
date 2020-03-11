@@ -140,7 +140,11 @@ class CiscoRange(MutableSequence):
         match = re.match(pattern=self.PREFIX_REGEX, string=item)
         prefix = match.group(0) if match else ""
         self.logger.debug(msg="Prefix: '{}'".format(prefix))
-        suffix = re.search(pattern=self.SUFFIX_REGEX, string=item).group(0)
+        try:
+            suffix = re.search(pattern=self.SUFFIX_REGEX, string=item).group(0)
+        except AttributeError:
+            self.logger.error("Suffix regex did not match on item: {}".format(item))
+            suffix = ""
         self.logger.debug(msg="Suffix: '{}'".format(suffix))
         match = re.search(pattern=self.RANGE_REGEX, string=suffix)
         if match:

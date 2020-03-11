@@ -6,7 +6,9 @@ import timeit
 from ccutils.utils.common_utils import get_logger
 from ccutils.ccparser import BaseConfigLine
 from ccutils.ccparser import BaseInterfaceLine
+import functools
 
+re._MAXCACHE = 1024
 
 class BaseConfigParser(object):
     """
@@ -221,6 +223,7 @@ class BaseConfigParser(object):
         return hostname
 
     @property
+    @functools.lru_cache()
     def cdp(self):
         if len(self.find_objects(regex="^no cdp run")):
             return False

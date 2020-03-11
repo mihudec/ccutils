@@ -5,18 +5,17 @@
         "l2",
         "physical"
       ],
-      "description": null,
       "unprocessed_lines": [],
       "shutdown": false,
       "cdp": true,
-      "logging_events": [],
-      "channel_group": null,
-      "speed": null,
-      "duplex": null,
       "l2": {
         "native_vlan": 10,
         "trunk_encapsulation": "dot1q",
         "mode": "trunk",
+        "allowed_vlans": [
+          "10",
+          "20"
+        ],
         "storm_control": {
           "thresholds": [
             {
@@ -41,19 +40,11 @@
         "l2",
         "physical"
       ],
-      "description": null,
       "unprocessed_lines": [],
       "shutdown": false,
       "cdp": true,
-      "logging_events": [],
-      "channel_group": null,
-      "speed": null,
-      "duplex": null,
       "l2": {
-        "native_vlan": null,
-        "trunk_encapsulation": null,
         "mode": "access",
-        "allowed_vlans": 10,
         "access_vlan": 10,
         "voice_vlan": 20
       }

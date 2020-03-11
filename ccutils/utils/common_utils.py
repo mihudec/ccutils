@@ -3,6 +3,24 @@ import pathlib
 import logging
 import sys
 import re
+import yaml
+from collections import OrderedDict
+from packaging import version
+
+
+class UnsortableList(list):
+    def sort(self, *args, **kwargs):
+        pass
+
+
+class UnsortableOrderedDict(OrderedDict):
+    def items(self, *args, **kwargs):
+        return UnsortableList(OrderedDict.items(self, *args, **kwargs))
+
+
+class CustomDumper(yaml.Dumper):
+    pass
+
 
 def get_logger(name, verbosity=4):
     """
@@ -180,9 +198,16 @@ def check_path(path, create=False):
     return return_path
 
 
+def interface_sort(crange, name):
+    index = crange._list.index(name)
+    return crange._list.index(name)
+
+
 def jprint(data, indent=2):
     print(json.dumps(obj=data, indent=indent))
 
+def has_old_pyyaml():
+    return version.parse(yaml.__version__) < version.parse("5.1")
 
 def load_excel_sheet(file, sheet_name):
     try:
