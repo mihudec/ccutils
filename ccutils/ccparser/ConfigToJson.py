@@ -31,7 +31,7 @@ class ConfigToJson:
 
         :return:
         """
-        interface_lines = list(filter(lambda x: "interface" in x.type, self.config.config_lines_obj))
+        interface_lines = list(filter(lambda x: "interface" in x.type, self.config.lines))
         self.logger.debug(msg="Loaded {} interface lines.".format(len(interface_lines)))
         for interface in interface_lines:
             port_mode = interface.port_mode

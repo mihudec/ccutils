@@ -15,7 +15,7 @@ class TestL2Interface(unittest.TestCase):
         }
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.switchport_mode
                 self.assertEqual(wanted_results[interface], result)
 
@@ -25,7 +25,7 @@ class TestL2Interface(unittest.TestCase):
         }
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.access_vlan
                 self.assertEqual(wanted_results[interface], result)
 
@@ -35,7 +35,7 @@ class TestL2Interface(unittest.TestCase):
         }
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.voice_vlan
                 self.assertEqual(wanted_results[interface], result)
 
@@ -45,7 +45,7 @@ class TestL2Interface(unittest.TestCase):
         }
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.trunk_encapsulation
                 self.assertEqual(wanted_results[interface], result)
 
@@ -55,7 +55,7 @@ class TestL2Interface(unittest.TestCase):
         }
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.native_vlan
                 self.assertEqual(wanted_results[interface], result)
 
@@ -63,7 +63,7 @@ class TestL2Interface(unittest.TestCase):
         wanted_results = json.loads(pathlib.Path(r"./results/test_storm_control.json").read_text())
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.storm_control
                 self.assertEqual(wanted_results[interface], result)
 
@@ -83,7 +83,7 @@ class TestL3Interface(unittest.TestCase):
 
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.keepalive
                 self.assertEqual(wanted_results[interface], result)
 
@@ -95,7 +95,7 @@ class TestL3Interface(unittest.TestCase):
 
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.tcp_mss
                 self.assertEqual(wanted_results[interface], result)
 
@@ -107,7 +107,7 @@ class TestL3Interface(unittest.TestCase):
 
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.ip_mtu
                 self.assertEqual(wanted_results[interface], result)
 
@@ -136,7 +136,7 @@ class TestTunnelInterface(unittest.TestCase):
 
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.interface_name == interface][0]
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.tunnel_properties
                 self.assertEqual(wanted_results[interface], result)
 

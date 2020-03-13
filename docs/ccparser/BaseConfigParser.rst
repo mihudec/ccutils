@@ -18,7 +18,7 @@ Quick Start
     config = BaseConfigParser(config=path_to_file)
 
     # Print number of config lines
-    print(len(config.config_lines_obj))
+    print(len(config.lines))
 
 
 

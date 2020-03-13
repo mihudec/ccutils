@@ -203,7 +203,7 @@ class BaseInterfaceLine(BaseConfigLine):
         if not self.is_interface:
             return None
         else:
-            return self.re_match(self.interface_regex, group=1)
+            return self.re_match(self._interface_regex, group=1)
 
     @property
     @functools.lru_cache()
@@ -332,7 +332,7 @@ class BaseInterfaceLine(BaseConfigLine):
         config (eg. `no cdp run` in the global config will make this property be `False`)
 
         Returns:
-            bool: True if CDP is enabled, False otherwise
+            bool: ``True`` if CDP is enabled, ``False`` otherwise
 
         """
         global_cdp = self.config.cdp
@@ -574,6 +574,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def speed(self):
+        """
+        Return speed of the interface set by command **speed X**
+
+        Returns:
+            int: Speed
+
+            Returns ``None`` if absent
+
+        """
         speed = None
         candidates = self.re_search_children(regex=self._speed_regex, group="speed")
         if len(candidates):
@@ -583,6 +592,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def duplex(self):
+        """
+        Return duplex of the interface set by command **duplex X**.
+
+        Returns:
+            str: Duplex
+
+            Returns ``None`` if absent
+
+        """
         duplex = None
         candidates = self.re_search_children(regex=self._duplex_regex, group="duplex")
         if len(candidates):
@@ -592,6 +610,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def bandwidth(self):
+        """
+        Return bandwidth of the interface set by command **bandwidth X**.
+
+        Returns:
+            int: Bandwidth
+
+            Returns ``None`` if absent
+
+        """
         bandwith = None
         candidates = self.re_search_children(regex=self._bandwidth_regex, group="bandwidth")
         if len(candidates):
@@ -601,6 +628,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def delay(self):
+        """
+        Return delay of the interface set by command **delay X**.
+
+        Returns:
+            int: Delay
+
+            Returns ``None`` if absent
+
+        """
         delay = None
         candidates = self.re_search_children(regex=self._delay_regex, group="delay")
         if len(candidates):
@@ -610,6 +646,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def mtu(self):
+        """
+        Return MTU of the interface set by command **mtu X**.
+
+        Returns:
+            int: MTU
+
+            Returns ``None`` if absent
+
+        """
         mtu = None
         candidates = self.re_search_children(regex=self._mtu_regex, group="mtu")
         if len(candidates):
@@ -619,6 +664,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def ip_mtu(self):
+        """
+        Return IP MTU of the interface set by command **ip mtu X**.
+
+        Returns:
+            int: IP MTU
+
+            Returns ``None`` if absent
+
+        """
         ip_mtu = None
         candidates = self.re_search_children(regex=self._ip_mtu_regex, group="ip_mtu")
         if len(candidates):
@@ -628,6 +682,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def tcp_mss(self):
+        """
+        Return TCP Max Segment Size of the interface set by command **ip tcp adjust-mss X**.
+
+        Returns:
+            int: TCP MSS
+
+            Returns ``None`` if absent
+
+        """
         tcp_mss = None
         candidates = self.re_search_children(regex=self._ip_tcp_mss_regex, group="tcp_mss")
         if len(candidates):
@@ -637,7 +700,6 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def keepalive(self):
-
         keepalive = None
         candidates = self.re_search_children(regex=self._keepalive_regex, group="ALL")
         if len(candidates):

@@ -24,7 +24,11 @@ class BaseConfigParser(object):
         Args:
             config (:obj:`pathlib.Path` or `str` or `list`): Config file in a form of `pathlib.Path`, or `string`
                 containing the entire config or list of lines of the config file
-            verbosity (:obj:`int`, optional): Determines the verbosity of logging output, defaults to 4 - Info
+            verbosity (:obj:`int`, optional): Determines the verbosity of logging output, defaults to 4: Info
+
+        Attributes:
+            lines (list): Contains list of all config lines stored as objects (see :class:`ccutils.ccparser.BaseConfigLine`)
+            config_lines_str (list): Contains list of all config lines stored as strings
 
         Examples:
 
@@ -66,8 +70,19 @@ class BaseConfigParser(object):
         #: This is a URI.
         self.lines = []
         self.config_lines_str = []
-        self.config_lines_obj = []
         self.parse()
+
+    @property
+    def config_lines_obj(self):
+        """
+        Kept for backwards compatibility, will be removed in future versions.
+
+        Returns:
+            list: BaseConfigParser.lines
+
+        """
+        self.logger.warning("DEPRECATED: You are using deprecated property .config_lines_obj use .lines instead.")
+        return self.lines
 
     def parse(self):
         """
