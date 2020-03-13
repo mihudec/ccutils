@@ -3,9 +3,7 @@ import pathlib
 import logging
 import sys
 import re
-import yaml
 from collections import OrderedDict
-from packaging import version
 
 
 class UnsortableList(list):
@@ -16,10 +14,6 @@ class UnsortableList(list):
 class UnsortableOrderedDict(OrderedDict):
     def items(self, *args, **kwargs):
         return UnsortableList(OrderedDict.items(self, *args, **kwargs))
-
-
-class CustomDumper(yaml.Dumper):
-    pass
 
 
 def get_logger(name, verbosity=4):
@@ -71,9 +65,12 @@ def split_interface_name(interface: str):
     This function takes in interface string such as "GigabitEthernet0/10" and returns a list containing name and number,
     such as ["GigabitEthernet", "0/10"]
 
-    :param str interface:
-    :rtype: list
-    :return: A list
+    Args:
+        interface (str): Interface to perform split on
+
+    Returns:
+        list: List containing name and number of interface, such as ``["GigabitEthernet", "0/10"]``
+
     """
     pattern = re.compile(pattern=r"(?P<name>^[A-z\-]+(?=\d))(?P<number>[\d+\/]+)")
     try:
@@ -207,6 +204,18 @@ def jprint(data, indent=2):
     print(json.dumps(obj=data, indent=indent))
 
 def has_old_pyyaml():
+    try:
+        from packaging import version
+    except ModuleNotFoundError:
+        logger.error("Cannot determine version o PyYAML, missing 'packaging' package. Acting like PyYAML >= 5.1")
+        version = None
+        return False
+    try:
+        import yaml
+    except ImportError:
+        logger.error("Missing Package PyYAML")
+        return False
+
     return version.parse(yaml.__version__) < version.parse("5.1")
 
 def load_excel_sheet(file, sheet_name):

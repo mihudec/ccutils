@@ -1,14 +1,10 @@
 from ccutils.ccparser import BaseConfigParser, BaseConfigLine
-from ccutils.utils.common_utils import get_logger, interface_sort, CustomDumper, UnsortableOrderedDict, has_old_pyyaml
+from ccutils.utils.common_utils import get_logger, interface_sort, UnsortableOrderedDict, has_old_pyyaml
 from ccutils.utils import CiscoRange
 import re
 import json
-import yaml
 import pathlib
 from collections import OrderedDict
-
-
-
 
 
 class ConfigToJson:
@@ -152,9 +148,11 @@ class ConfigToJson:
 
     def get_ordered_interfaces(self):
         """
-        Returns interfaces as OrderedDict
+        Return interfaces as OrderedDict
 
-        :return:
+        Returns:
+            (:obj:`OrderedDict`): Interface section as OrderedDict
+
         """
         interfaces_crange = CiscoRange(list(self.data["interfaces"].keys()))
         ordered_interfaces = OrderedDict(sorted(self.data["interfaces"].items(), key=lambda x: interface_sort(crange=interfaces_crange, name=x[0])))
@@ -162,12 +160,38 @@ class ConfigToJson:
         return ordered_interfaces
 
     def to_json(self, indent=2):
+        """
+        Return JSON formatted structure describing configuration
+
+        Args:
+            indent (int): Set JSON indent, defaults to 2
+
+        Returns:
+            str: JSON string
+
+        """
         # Convert Interfaces to OrderedDict
         data = dict(self.data)
         data["interfaces"] = self.get_ordered_interfaces()
         return json.dumps(obj=data, indent=indent)
 
     def to_yaml(self):
+        """
+        Return YAML formatted structure describing configuration
+
+        Returns:
+            str: YAML string
+        """
+        try:
+            import yaml
+
+            class CustomDumper(yaml.Dumper):
+                pass
+
+        except ImportError:
+            self.logger.error("Missing Package PyYAML. Please install it by running 'pip3 install pyyaml'")
+            return ""
+
         # Convert Interfaces to OrderedDict
         data = dict(self.data)
         data["interfaces"] = self.get_ordered_interfaces()
@@ -178,8 +202,6 @@ class ConfigToJson:
         else:
             CustomDumper.add_representer(OrderedDict, yaml.representer.SafeRepresenter.represent_dict)
             return yaml.dump(data=data, sort_keys=False, Dumper=CustomDumper)
-
-
 
     @staticmethod
     def jprint(data):

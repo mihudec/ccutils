@@ -43,7 +43,9 @@ release = '0.2-0-beta'
 autoclass_content = 'both'
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.doctest'
+    'sphinx.ext.doctest',
+    "sphinx.ext.napoleon",
+    #"sphinxcontrib.napoleon"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

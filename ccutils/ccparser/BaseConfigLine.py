@@ -14,18 +14,21 @@ class BaseConfigLine(object):
     comment_regex = re.compile(pattern=r"^(\s+)?!", flags=re.MULTILINE)
     interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
 
-    def __init__(self, number, text, config, verbosity):
+    def __init__(self, number, text, config, verbosity=3):
         """
+        **This class is not meant to be instantiated directly, but only from BaseConfigParser instance.**
 
-        :param int number: Index of line in config
-        :param str text: Text of the config line
-        :param config: Reference to the parent BaseConfigParser object
-        :param int verbosity: Logging output level
+        Args:
+            number (int): Index of line in config
+            text (str): Text of the config line
+            config (:obj:`BaseConfigParser`): Reference to the parent BaseConfigParser object
+            verbosity (:obj:`int`, optional): Logging output level, defaults to 3: Warning
+
         """
         self.logger = get_logger(name="BaseConfigLine", verbosity=verbosity)
         #print(self.logger.handlers)
         self.config = config
-        self.config_lines_obj = self.config.config_lines_obj
+        self.config_lines_obj = self.config.lines
         self.number = number
         self.text = text
         self.indent = len(self.text) - len(self.text.lstrip(" "))
@@ -46,11 +49,11 @@ class BaseConfigLine(object):
     def get_children(self):
         children = []
         line_num = int(self.number) + 1
-        while line_num < len(self.config_lines_obj) - 1:
-            if self.config_lines_obj[line_num].indent <= self.indent:
+        while line_num < len(self.config.lines) - 1:
+            if self.config.lines[line_num].indent <= self.indent:
                 break
             else:
-                children.append(self.config_lines_obj[line_num])
+                children.append(self.config.lines[line_num])
                 line_num += 1
         return children
 
@@ -151,8 +154,8 @@ class BaseConfigLine(object):
 
     @property
     def is_parent(self):
-        if self.number < len(self.config_lines_obj)-1:
-            if self.config_lines_obj[self.number+1].indent > self.indent:
+        if self.number < len(self.config.lines)-1:
+            if self.config.lines[self.number+1].indent > self.indent:
                 return True
             else:
                 return False

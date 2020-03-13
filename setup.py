@@ -7,7 +7,7 @@ setup(
     name='ccutils',
     version='0.2.0',
     packages=find_packages(exclude=["test", "examples"]),
-    url='https://bitbucket.org/mijujda/ccutils',
+    url='https://github.org/mihudec/ccutils',
     license='',
     author='Miroslav Hudec',
     author_email='mijujda@gmail.com',

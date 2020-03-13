@@ -1,7 +1,6 @@
 Welcome to CCUtils documentation!
 =================================
 
-
 ..  _GitHub: https://github.com/mihudec/ccutils
 
 ..  toctree::
@@ -10,5 +9,14 @@ Welcome to CCUtils documentation!
     ccparser/index
     cctemplater/index
     templates/index
+    utils/index
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
 
 

@@ -19,16 +19,52 @@ class BaseConfigParser(object):
 
     def __init__(self, config=None, verbosity=4, **kwargs):
         """
+        Base class for parsing Cisco-like configs
 
-        :param config: ``pathlib.Path`` object pointing to a config file, or string representing either path to file of configuration itself. List of config lines is also supported.
-        :param int verbosity: Determines logging level
-        :param kwargs:
+        Args:
+            config (:obj:`pathlib.Path` or `str` or `list`): Config file in a form of `pathlib.Path`, or `string`
+                containing the entire config or list of lines of the config file
+            verbosity (:obj:`int`, optional): Determines the verbosity of logging output, defaults to 4 - Info
+
+        Examples:
+
+            Possible config inputs::
+
+                # Using pathlib
+                config_file = pathlib.Path("/path/to/config_file.txt")
+                config = BaseConfigParser(config=config_file)
+
+                # Using string
+                config_string = '''
+                hostname RouterA
+                !
+                interface Ethernet0/0
+                 description Test Interface
+                 ip address 10.0.0.1 255.255.255.0
+                !
+                end
+                '''
+                config = BaseConfigParser(config=config_string)
+
+                # Using list
+                config_list = [
+                "hostname RouterA",
+                    "!",
+                    "interface Ethernet0/0",
+                    " description Test Interface",
+                    " ip address 10.0.0.1 255.255.255.0",
+                    "!",
+                    "end"
+                ]
+                config = BaseConfigParser(config=config_list)
+
         """
         self.verbosity = verbosity
         self.logger = get_logger(name="ConfigParser", verbosity=verbosity)
         self.config = config
         self.path = self._check_path(kwargs.get("filepath", None)) if kwargs.get("filepath", None) else None
         #: This is a URI.
+        self.lines = []
         self.config_lines_str = []
         self.config_lines_obj = []
         self.parse()
@@ -147,19 +183,18 @@ class BaseConfigParser(object):
 
     def _create_cfg_line_objects(self):
         """
-        Function for generating ``self.config_lines_obj``.
+        Function for generating ``self.lines``.
 
-        :return:
         """
         start = timeit.default_timer()
         for number, text in enumerate(self.config_lines_str):
             if re.match(pattern=r"^interface\s\S+", string=text, flags=re.MULTILINE):
-                self.config_lines_obj.append(BaseInterfaceLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
+                self.lines.append(BaseInterfaceLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
             else:
-                self.config_lines_obj.append(BaseConfigLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
-        for line in self.config_lines_obj:
+                self.lines.append(BaseConfigLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
+        for line in self.lines:
             line.type = line.get_type
-        self.logger.debug(msg="Created {} ConfigLine objects in {} ms.".format(len(self.config_lines_obj), (timeit.default_timer()-start)*1000))
+        self.logger.debug(msg="Created {} ConfigLine objects in {} ms.".format(len(self.lines), (timeit.default_timer()-start)*1000))
 
     def _compile_regex(self, regex, flags=re.MULTILINE):
         """
@@ -180,25 +215,24 @@ class BaseConfigParser(object):
         """
         Function for filtering Config Lines Objects based on given regex.
 
-        :param regex:
-        :param flags:
-        :return: List of ``BaseConfigLine`` objects. :ref:`See Here<base-config-line>`
+        Args:
+            regex (:obj:`re.Pattern` or `str`): Regex based on which the search is done
+            flags (:obj:`int`, optional): Set custom flags for regex, defaults to ``re.MULTILINE``
 
-        **Example:**
+        Examples:
 
-        .. highlight:: python
-        .. code-block:: python
+            Example::
 
-            # Initialize the object
-            parser = BaseConfigParser(config="/path/to/config_file.cfg")
+                # Initialize the object
+                config = BaseConfigParser(config="/path/to/config_file.cfg")
 
-            # Define regex for matching config lines
-            interface_regex = r"^ interface"
+                # Define regex for matching config lines
+                interface_regex = r"^ interface"
 
-            # Apply the filter
-            interface_lines = parser.find_objects(regex=interface_regex)
+                # Apply the filter
+                interface_lines = config.find_objects(regex=interface_regex)
 
-            # Returns subset of ``self.config_lines_obj`` which match specified regex
+                # Returns subset of ``self.lines`` which match specified regex
 
         """
         pattern = None
@@ -207,7 +241,7 @@ class BaseConfigParser(object):
         else:
             pattern = regex
         results = []
-        for line in self.config_lines_obj:
+        for line in self.lines:
             if re.search(pattern=pattern, string=line.text):
                 results.append(line)
         self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
@@ -303,5 +337,5 @@ class BaseConfigParser(object):
 
     @property
     def interface_lines(self):
-        return (x for x in self.config_lines_obj if x.is_interface)
+        return (x for x in self.lines if x.is_interface)
 

@@ -61,10 +61,12 @@ class BaseInterfaceLine(BaseConfigLine):
         """
         **This class is not meant to be instantiated directly, but only from BaseConfigParser instance.**
 
-        :param int number: Index of line in config
-        :param str text: Text of the config line
-        :param config: Reference to the parent BaseConfigParser object
-        :param int verbosity: Logging output level
+        Args:
+            number (int): Index of line in config
+            text (str): Text of the config line
+            config (:obj:`BaseConfigParser`): Reference to the parent BaseConfigParser object
+            verbosity (:obj:`int`, optional): Logging output level, defaults to 3: Warning
+
         """
         super(BaseInterfaceLine, self).__init__(number=number, text=text, config=config, verbosity=verbosity)
         self.logger = get_logger(name="BaseInterfaceLine", verbosity=verbosity)
@@ -73,12 +75,17 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def get_unprocessed(self, return_type=None):
         """
-        Returns a list of config lines under the interface, which did not match any of the existing regex patterns.
-        Mostly for development/testing purposes. By default returns list of objects.
+        Return a list of config lines under the interface, which did not match any of the existing regex patterns.
+        Mostly for development/testing purposes.
 
-        :param return_type: Set this to `"text"` to receive list of strings.
-        :rtype: list
-        :return: List of unprocessed config lines.
+        By default returns list of objects.
+
+        Args:
+            return_type (str): Set this to `"text"` to receive list of strings
+
+        Returns:
+            list: List of unprocessed config lines
+
         """
         unprocessed_children = self.get_children()
         regexes = [
@@ -158,8 +165,9 @@ class BaseInterfaceLine(BaseConfigLine):
 
         ``tunnel`` - Interface is a Tunnel
 
-        :rtype: list
-        :return: List of flags
+        Returns:
+             list: List of flags
+
         """
         flags = []
         flags.append(self.port_mode)
@@ -188,8 +196,9 @@ class BaseInterfaceLine(BaseConfigLine):
         """
         Return name of the interface, such as `GigabitEthernet0/1`.
 
-        :return: Name of the interface
-        :rtype: str
+        Returns:
+            str: Name of the interface
+
         """
         if not self.is_interface:
             return None
@@ -208,8 +217,11 @@ class BaseInterfaceLine(BaseConfigLine):
         """
         Returns description of the interface.
 
-        :return: Interface description or `None`
-        :rtype: str or `None`
+        Returns:
+            str: Interface description
+
+            Returns ``None`` if absent
+
         """
         if not self.is_interface:
             return None
@@ -227,8 +239,9 @@ class BaseInterfaceLine(BaseConfigLine):
         """
         Checks whether the interface is running in switched (**l2**) or routed (**l3**) mode.
 
-        :rtype: str
-        :return: `l2` or `l3`
+        Returns:
+            str: `l2` or `l3`
+
         """
         if len(self.re_search_children(regex="ip address")):
             return "l3"
@@ -239,15 +252,28 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def ip_addresses(self):
         """
-        Returns a list of IP addresses, each address is represented by dictionary,
-        such as **{"ip_address": "10.0.0.1", "mask": "255.255.255.0", "secondary: False"}**.
+        Return list of IP addresses present on the interface
 
-        Example output: **[{"ip_address": "10.0.0.1", "mask": "255.255.255.0", "secondary: False"}]**
+        Returns:
+            list: List of dictionaries representing individual IP addresses
 
-        If there is no IP address present on the interface, an empty list is returned.
+            Example::
 
-        :rtype: list
-        :return: A list of dicts
+                [
+                    {
+                        "ip_address": "10.0.0.1",
+                        "mask": "255.255.255.0",
+                        "secondary": False
+                    },
+                    {
+                        "ip_address": "10.0.1.1",
+                        "mask": "255.255.255.0",
+                        "secondary": True
+                    }
+                ]
+
+            If there is no IP address present on the interface, an empty list is returned.
+
         """
         ip_addresses = []
         candidates = self.re_search_children(regex=self._ip_addr_regex)
@@ -259,10 +285,13 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def vrf(self):
         """
-        Returns VRF of the interface
+        Return VRF of the interface
 
-        :rtype: str
-        :return: Name of the VRF or None
+        Returns:
+            str: Name of the VRF
+
+            Returns ``None`` if absent
+
         """
         vrf = None
         candidates = self.re_search_children(regex=self._vrf_regex, group="vrf")
@@ -284,8 +313,9 @@ class BaseInterfaceLine(BaseConfigLine):
         """
         Returns OSPF priority of the interface.
 
-        :rtype: int
-        :return: OSPF Priority or None
+        Returns:
+            int: OSPF Priority or None
+
         """
         ospf_priority = None
         candidates = self.re_search_children(regex=self._ospf_priority_regex, group="ospf_priority")
@@ -301,8 +331,9 @@ class BaseInterfaceLine(BaseConfigLine):
         meaning if there is no specific configuration on the interface level, it will return state based on the entire
         config (eg. `no cdp run` in the global config will make this property be `False`)
 
-        :rtype: bool
-        :return: True if CDP is enabled, False if it is not.
+        Returns:
+            bool: True if CDP is enabled, False otherwise
+
         """
         global_cdp = self.config.cdp
         candidates = self.re_search_children(regex=self._cdp_regex)
@@ -366,9 +397,13 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def helper_address(self):
         """
-        Returns a list of IP addresses specified with ``ip helper-address`` command.
+        Return a list of IP addresses specified with **ip helper-address** command (DHCP relay).
 
-        :return:
+        Returns:
+            list: List of helper addresses
+
+            Returns ``None`` if absent
+
         """
         helper_address = None
         candidates = self.re_search_children(regex=self._helper_address_regex, group="helper_address")
@@ -379,6 +414,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def native_vlan(self):
+        """
+        Return Native VLAN of L2 Interface
+
+        Returns:
+            int: Native VLAN Number (`None` if absent)
+
+            Returns ``None`` if absent
+
+        """
         native_vlan = None
         candidates = self.re_search_children(regex=self._native_vlan_regex, group="native_vlan")
         if len(candidates):
@@ -388,6 +432,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def trunk_encapsulation(self):
+        """
+        Return encapsulation on trunk interfaces
+
+        Returns:
+            str: "dot1q" or "isl"
+
+            Returns ``None`` if absent
+
+        """
         trunk_encapsulation = None
         candidates = self.re_search_children(regex=self._trunk_encapsulation_regex, group="encapsulation")
         if len(candidates):
@@ -397,6 +450,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @property
     @functools.lru_cache()
     def switchport_mode(self):
+        """
+        Return L2 Mode of interface, either access or trunk
+
+        Returns:
+            str: "access" or "trunk"
+
+            Returns ``None`` if absent
+
+        """
         switchport_mode = None
         candidates = self.re_search_children(regex=self._switchport_mode_regex, group="switchport_mode")
         if len(candidates):
@@ -409,8 +471,9 @@ class BaseInterfaceLine(BaseConfigLine):
         """
         Check whether the port is running DTP or not. Checks for presence of ``switchport nonegotiate`` command
 
-        :rtype: bool
-        :return:
+        Returns:
+            bool: ``True`` if command is present, ``False`` otherwise
+
         """
         candidates = self.re_search_children(regex=self._switchport_nonegotiate_regex)
         if len(candidates):
@@ -423,11 +486,16 @@ class BaseInterfaceLine(BaseConfigLine):
     def trunk_allowed_vlans(self):
         """
         Return a expanded list of VLANs allowed with ``switchport trunk allowed vlan x,y,z``.
-        Caution: This does not mean the interface is necessarily a trunk port.
-        Returns `None` if the command is not present. Returns `[0]` if `switchport trunk allowed vlan none`
 
-        :rtype: list
-        :return: List of allowed VLANs or None
+        **Caution:** This does not mean the interface is necessarily a trunk port.
+
+        Returns:
+            list: Expanded list of allowed VLANs
+
+            Returns ``None`` if absent
+
+            Returns "none" if ``switchport trunk allowed vlan none``
+
         """
         candidates = self.re_search_children(regex=self._trunk_allowed_vlans_regex, group="allowed_vlans")
         if len(candidates):
@@ -447,11 +515,15 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def access_vlan(self):
         """
-        Returns a number of access VLAN or `None` if the command ``switchport access vlan x`` is not present.
-        Caution: This does not mean the interface is necessarily an access port.
+        Return a number of access VLAN or `None` if the command ``switchport access vlan x`` is not present.
 
-        :rtype: int
-        :return: Number of access VLAN or None
+        **Caution:** This does not mean the interface is necessarily an access port.
+
+        Returns:
+            int: Number of access VLAN or None
+
+            Returns ``None`` if absent
+
         """
         access_vlan = None
         candidates = self.re_search_children(regex=self._access_vlan_regex, group="access_vlan")
@@ -463,10 +535,13 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def voice_vlan(self):
         """
-        Returns a number of voice VLAN or `None` if the command ``switchport voice vlan x`` is not present.
+        Return a number of voice VLAN
 
-        :rtype: int
-        :return: Number of voice VLAN or None
+        Returns:
+            int: Number of voice VLAN or None
+
+            Returns ``None`` if absent
+
         """
         voice_vlan = None
         candidates = self.re_search_children(regex=self._voice_vlan_regex, group="voice_vlan")
@@ -478,11 +553,17 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def channel_group(self):
         """
-        Returns a dictionary describing Port-channel/Etherchannel related configuration, such as
-        **{"channel_group_number": "1", "channel_group_mode": "active"}**
+        Return a dictionary describing Port-channel/Etherchannel related configuration
 
-        :rtype: dict
-        :return: Dictionary or None
+        Returns:
+            dict: Channel-group parameters
+
+            Example::
+
+                {"channel_group_number": "1", "channel_group_mode": "active"}
+
+            Otherwise returns ``None``
+
         """
         channel_group = None
         candidates = self.re_search_children(regex=self._channel_group_regex, group="ALL")
@@ -567,12 +648,20 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def service_policy(self):
         """
-        Returns dictionary such as **{"input": "policy_in", "output": "policy_out"}**
+        Return names of applied service policies
 
-        If there is not input or output service policy a default dict is returned: **{"input": None, "output": None}**
+        Returns:
+            dict: Dictionary containing names of both input and output policies.
 
-        :rtype: dict
-        :return: Names of input and output service policies
+            Example::
+
+                {"input": "TEST_INPUT_POLICY", "output": "TEST_OUTPUT_POLICY"}
+
+            If there are no policies specified, returns::
+
+                {"input": None, "output": None}
+
+
         """
         service_policy = {"input": None, "output": None}
         candidates = self.re_search_children(regex=self._service_policy_regex, group="ALL")
@@ -588,8 +677,23 @@ class BaseInterfaceLine(BaseConfigLine):
     @functools.lru_cache()
     def tunnel_properties(self):
         """
+        Return properties related to Tunnel interfaces
 
-        :return:
+        Returns:
+            dict: Dictionary with tunnel properties.
+
+            Example::
+
+                {
+                    "source": "Loopback0",
+                    "destination": "10.0.0.1",
+                    "vrf": None,
+                    "mode": "ipsec ipv4",
+                    "ipsec_profile": "TEST_IPSEC_PROFILE"
+                }
+
+            Returns ``None`` if absent
+
         """
         # Check if interface is a Tunnel
         if not re.match(pattern=r"^Tu", string=self.name):
