@@ -7,7 +7,7 @@ from ccutils.ccparser import BaseConfigParser, ConfigToJson
 class TestBaseConfigParser(unittest.TestCase):
 
     def test_performance(self):
-        test_path = pathlib.Path(r"C:\Users\mhudec\CloudStation\Work\ALEF\MHMP\MHMP_Migrations\CONFIG\OLD")
+        test_path = pathlib.Path(r"/path/to/test_configs")
         config_files = [x for x in test_path.glob("**/*.conf")]
         for config_file in config_files:
 
