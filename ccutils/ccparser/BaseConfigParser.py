@@ -6,6 +6,7 @@ import timeit
 from ccutils.utils.common_utils import get_logger
 from ccutils.ccparser import BaseConfigLine
 from ccutils.ccparser import BaseInterfaceLine
+from ccutils.utils import CiscoRange
 import functools
 
 re._MAXCACHE = 1024
@@ -16,6 +17,10 @@ class BaseConfigParser(object):
     """
 
     PATTERN_TYPE = type(re.compile(pattern=""))
+
+    # Patterns
+    _vlan_configuration_regex = re.compile(pattern=r"^vlan configuration (?P<vlan_range>[\d\-,]+)", flags=re.MULTILINE)
+    _device_tracking_attach_policy_regex = re.compile(pattern=r"^ device-tracking attach-policy (?P<policy>\S+)")
 
     def __init__(self, config=None, verbosity=4, **kwargs):
         """
@@ -300,6 +305,7 @@ class BaseConfigParser(object):
     @property
     def vlans(self):
         vlans = {}
+        # Basic VLAN Definition
         vlan_id_regex = re.compile(pattern=r"^vlan (?P<vlan_id>\d+)", flags=re.MULTILINE)
         vlan_name_regex = re.compile(pattern=r"^ name (?P<vlan_name>\S+)", flags=re.MULTILINE)
         candidates = self.find_objects(regex=vlan_id_regex)
@@ -310,6 +316,15 @@ class BaseConfigParser(object):
             if len(vlan_name_candidate):
                 vlan_name = vlan_name_candidate[0]
             vlans[vlan_id] = {"name": vlan_name}
+        # VLAN Configuration
+        candidates = self.find_objects(regex=self._vlan_configuration_regex)
+        for candidate in candidates:
+            vlan_range = CiscoRange(candidate.re_search(regex=self._vlan_configuration_regex, group="vlan_range"))
+            print(vlan_range)
+            policy = candidate.re_search_children(regex=self._device_tracking_attach_policy_regex, group="policy")
+            if len(policy):
+                for vlan_id in vlan_range:
+                    vlans[vlan_id]["device_tracking_policy"] = policy[0]
         return vlans
 
     @property

@@ -236,9 +236,17 @@ class CiscoRange(MutableSequence):
                 self.logger.debug(msg="BEFORE: CurrentPrefix: '{}'; CurrentItem: '{}'; CurrentEntry: '{}'; Prefix: '{}'".format(current_prefix, item, entry, prefix))
                 if current_prefix == prefix:
                     if entry[1] == item-1:
-                        entry[1] = item
+                        # Increase entry[1]
+                        entry[1] += 1
                     else:
-                        results.append("{}{}-{}".format(prefix, *entry))
+                        # Cisco VLAN range uses compression (eg. "1-3") only when the difference between start and stop is HIGHER than 1
+                        # If difference is EQUAL to 1, each number is separate (eg. "1,2")
+                        #Do this only for entries without prefix
+                        if (entry[1] == entry[0] + 1) and prefix == "":
+                            results.append("{}".format(entry[0]))
+                            results.append("{}".format(entry[1]))
+                        else:
+                            results.append("{}{}-{}".format(prefix, *entry))
                         entry = [item]
                 else:
                     results.append("{}{}-{}".format(prefix, *entry))
@@ -252,7 +260,8 @@ class CiscoRange(MutableSequence):
         
         return results
 
-
+    def to_string(self):
+        return ",".join(self.compressed_list)
 
 
 

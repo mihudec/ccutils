@@ -1,0 +1,6 @@
+vlan 10
+ name VLAN10
+vlan 20
+ name VLAN20
+vlan configuration 10,20
+ device-tracking attach-policy IPDT-ENDPOINT

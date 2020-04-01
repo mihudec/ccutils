@@ -6,16 +6,18 @@ from ccutils.ccparser import BaseConfigParser, ConfigToJson
 
 class TestBaseConfigParser(unittest.TestCase):
 
-    def test_performance(self):
-        test_path = pathlib.Path(r"/path/to/test_configs")
-        config_files = [x for x in test_path.glob("**/*.conf")]
-        for config_file in config_files:
-
-            with self.subTest(msg=config_file.stem):
-                config = BaseConfigParser(config=config_file, verbosity=4)
-                ctj = ConfigToJson(config=config, omit_empty=True, verbosity=3)
-                #ctj.jprint(ctj.data)
-                self.assertTrue(True)
+    def test_Vlans(self):
+        wanted_results = {
+            "vlans_test": None
+        }
+        for test in wanted_results.keys():
+            with self.subTest(msg=test):
+                config = BaseConfigParser(config=pathlib.Path("./resources/{}.txt".format(test)))
+                print(config.lines)
+                result = json.loads(pathlib.Path("./results/{}.json".format(test)).read_text())
+                print(config.vlans)
+                print(result)
+                self.assertDictEqual(config.vlans, result)
 
 if __name__ == '__main__':
     unittest.main()

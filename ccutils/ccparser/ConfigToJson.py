@@ -62,6 +62,8 @@ class ConfigToJson:
             if interface.duplex or not self.omit_empty:
                 self.data["interfaces"][interface.name]["duplex"] = interface.duplex
 
+
+
             if port_mode == "l3":
                 # Get IP addresses
                 self.data["interfaces"][interface.name]["l3"] = {}
@@ -110,6 +112,10 @@ class ConfigToJson:
                 # Get Access VLAN
                 if interface.access_vlan or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l2"]["access_vlan"] = interface.access_vlan
+
+                # Get Switchport Nonegotiate
+                if interface.switchport_nonegotiate or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l2"]["switchport_nonegotiate"] = interface.switchport_nonegotiate
                 
                 # Get Voice VLAN
                 if interface.voice_vlan or not self.omit_empty:
@@ -118,6 +124,10 @@ class ConfigToJson:
                 # Get Storm Control
                 if interface.storm_control or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l2"]["storm_control"] = interface.storm_control
+
+                # Get Device Tracking Policy
+                if interface.device_tracking_policy or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l2"]["device_tracking"] = {"policy": interface.device_tracking_policy}
 
             if "tunnel" in flags:
                 self.data["interfaces"][interface.name]["tunnel"] = interface.tunnel_properties

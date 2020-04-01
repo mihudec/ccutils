@@ -1,0 +1,10 @@
+{
+  "10": {
+    "name": "VLAN10",
+    "device_tracking_policy": "IPDT-ENDPOINT"
+  },
+  "20": {
+    "name": "VLAN20",
+    "device_tracking_policy": "IPDT-ENDPOINT"
+  }
+}

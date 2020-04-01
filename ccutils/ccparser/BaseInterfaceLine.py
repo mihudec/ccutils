@@ -56,6 +56,9 @@ class BaseInterfaceLine(BaseConfigLine):
 
     _storm_control_threshold_regex = re.compile(pattern=r"^ storm-control (?P<traffic>broadcast|multicast) level (?:(?P<type>bps|pps) )?(?P<raising>\d{1,3}(?:\.\d{1,2})?(?:k|m|g)?)(?: (?P<falling>\d{1,3}(?:\.\d{1,2})?(?:k|m|g)?))?", flags=re.MULTILINE)
     _storm_control_action_regex = re.compile(pattern=r"^ storm-control action (?P<action>trap|shutdown)")
+    _device_tracking_attach_policy_regex = re.compile(pattern=r"^ device-tracking attach-policy (?P<policy>\S+)")
+    _encapsulation_regex = re.compile(pattern=r"^ encapsulation (?P<type>\S+) (?P<tag>\d+)(?: (?P<native>native))?")
+
 
     def __init__(self, number, text, config, verbosity=3):
         """
@@ -787,6 +790,18 @@ class BaseInterfaceLine(BaseConfigLine):
         if len(action_candidates):
             storm_control["action"] = action_candidates[0]
         return storm_control
+
+    @property
+    @functools.lru_cache()
+    def device_tracking_policy(self):
+        device_tracking_policy = None
+        candidates = self.re_search_children(regex=self._device_tracking_attach_policy_regex, group="policy")
+        if len(candidates):
+            device_tracking_policy = candidates[0]
+        return device_tracking_policy
+
+
+
 
     def __str__(self):
         return "[BaseInterfaceLine #{} ({}): '{}']".format(self.number, self.type, self.text)
