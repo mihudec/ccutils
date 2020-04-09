@@ -1,0 +1,16 @@
+interface GigabitEthernet0/0
+ service instance 101 ethernet
+  description SI 101 TestDescription
+  encapsulation dot1q 101
+  service-policy input SomeInputPolicy
+  snmp trap link-status
+ !
+!
+interface GigabitEthernet0/1
+ service instance 10 ethernet
+  description SI 10 TestDescription
+  encapsulation untagged
+  snmp trap link-status
+  bridge-domain 10
+ !
+!

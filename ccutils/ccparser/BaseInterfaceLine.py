@@ -59,6 +59,14 @@ class BaseInterfaceLine(BaseConfigLine):
     _device_tracking_attach_policy_regex = re.compile(pattern=r"^ device-tracking attach-policy (?P<policy>\S+)")
     _encapsulation_regex = re.compile(pattern=r"^ encapsulation (?P<type>\S+) (?P<tag>\d+)(?: (?P<native>native))?")
 
+    _service_instance_regex = re.compile(pattern=r"^ service instance (?P<number>\d+) (?P<type>\S+)")
+    _service_instance_description_regex = re.compile(pattern=r"^  description (?P<description>.*)")
+    _service_instance_encapsulation_mapping_regex = re.compile(pattern=r"^  encapsulation (?P<type>\S+) (?P<tag>\d+)$", flags=re.MULTILINE)
+    _service_instance_encapsulation_string_regex = re.compile(pattern=r"^  encapsulation (?P<encapsulation>\S+)$", flags=re.MULTILINE)
+    _service_instance_bridge_domain_regex = re.compile(pattern=r"^  bridge-domain (?P<number>\d+)$", flags=re.MULTILINE)
+    _service_instance_service_policy_regex = re.compile(pattern=r"^  service-policy (?P<direction>input|output) (?P<policy_map>\S+)$", flags=re.MULTILINE)
+
+
 
     def __init__(self, number, text, config, verbosity=3):
         """
@@ -185,6 +193,10 @@ class BaseInterfaceLine(BaseConfigLine):
             flags.append("port-channel")
         elif "Tunnel" in interface[0]:
             flags.append("tunnel")
+        elif "Loopback" in interface[0]:
+            flags.append("virtual")
+        elif "BDI" in interface[0]:
+            flags.append("virtual")
         return flags
 
     @property
@@ -737,6 +749,56 @@ class BaseInterfaceLine(BaseConfigLine):
                 service_policy["output"] = candidate["policy_map"]
         print(candidates)
         return service_policy
+
+    @property
+    @functools.lru_cache()
+    def service_instances(self):
+        service_instances = None
+        service_instance_candidates = self.re_search_children(regex=self._service_instance_regex)
+        self.logger.debug("Interface {}: Service Instances Lines: {}".format(self.name, service_instance_candidates))
+        if len(service_instance_candidates):
+            service_instances = {}
+        for service_instance_line in service_instance_candidates:
+            match_dict = service_instance_line.re_search(regex=self._service_instance_regex, group="ALL")
+            instance_number = int(match_dict["number"])
+            service_instances[instance_number] = {"type": match_dict["type"]}
+
+            # Description
+            description_candidates = service_instance_line.re_search_children(regex=self._service_instance_description_regex, group="description")
+            if len(description_candidates):
+                service_instances[instance_number]["description"] = description_candidates[0]
+
+            # Encapsulation
+            # Try the mapping variant first
+            encapsulation_candidates = service_instance_line.re_search_children(regex=self._service_instance_encapsulation_mapping_regex, group="ALL")
+            if len(encapsulation_candidates):
+                service_instances[instance_number]["encapsulation"] = {"type": encapsulation_candidates[0]["type"], "tag": int(encapsulation_candidates[0]["tag"])}
+            else:
+                # Fallback to string variant
+                encapsulation_candidates = service_instance_line.re_search_children(regex=self._service_instance_encapsulation_string_regex, group="ALL")
+                if len(encapsulation_candidates):
+                    service_instances[instance_number]["encapsulation"] = encapsulation_candidates[0]["encapsulation"]
+
+            # Bridge Domain
+            bd_candidates = service_instance_line.re_search_children(regex=self._service_instance_bridge_domain_regex, group="number")
+            if len(bd_candidates):
+                service_instances[instance_number]["bridge_domain"] = int(bd_candidates[0])
+
+            # Service Policy
+            service_policy_candidates = service_instance_line.re_search_children(regex=self._service_instance_service_policy_regex, group="ALL")
+            if len(service_policy_candidates):
+                service_instances[instance_number]["service_policy"] = {"input": None, "output": None}
+                for candidate in service_policy_candidates:
+                    if candidate["direction"] == "input":
+                        service_instances[instance_number]["service_policy"]["input"] = candidate["policy_map"]
+                    elif candidate["direction"] == "output":
+                        service_instances[instance_number]["service_policy"]["output"] = candidate["policy_map"]
+
+
+
+
+        print(service_instances)
+        return service_instances
 
     @property
     @functools.lru_cache()

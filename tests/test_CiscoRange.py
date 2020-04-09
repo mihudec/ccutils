@@ -39,6 +39,14 @@ class TestCiscoRange(unittest.TestCase):
                 "result": ["1", "3-6", "8", "9", "11-20"]
             },
             "Test2": {
+                "source": [1, 3, 4, 5, 6, 8, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 9],
+                "result": ["1", "3-6", "8", "9", "11-20"]
+            },
+            "Test3": {
+                "source": [1, 3, 4, 5, 6, 8, "11-16", 17, 18, 19, 20, 9],
+                "result": ["1", "3-6", "8", "9", "11-20"]
+            },
+            "Test4": {
                 "source": "Fa0, Fa0/3-6, Fa0/1-2, Fa2/1-2 Fa2/0/10-11, Fa1/0/3-4",
                 "result": ["Fa0", "Fa0/1-6", "Fa2/1-2", "Fa1/0/3-4"]
             },
@@ -46,7 +54,7 @@ class TestCiscoRange(unittest.TestCase):
 
         for test in tests.keys():
             with self.subTest(msg=test):
-                cr = CiscoRange(tests[test]["source"])
+                cr = CiscoRange(tests[test]["source"], verbosity=5)
                 print(cr.compressed_list)
                 self.assertEqual(cr.compressed_list, tests[test]["result"])
 

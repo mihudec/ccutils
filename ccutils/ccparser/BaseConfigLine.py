@@ -55,7 +55,7 @@ class BaseConfigLine(object):
         """
         children = []
         line_num = int(self.number) + 1
-        print(len(self.config.lines))
+        #print(len(self.config.lines))
         while line_num <= len(self.config.lines) - 1:   # Avoid IndexError
             if self.config.lines[line_num].indent <= self.indent:
                 break

@@ -141,6 +141,41 @@ class TestTunnelInterface(unittest.TestCase):
                 self.assertEqual(wanted_results[interface], result)
 
 
+class TestServiceInstances(unittest.TestCase):
+    test_file_path = pathlib.Path("./resources/interface_service_instances_test.txt")
+    config = BaseConfigParser(config=test_file_path)
+
+    def test_interface_service_instances_1(self):
+        wanted_results = {
+            "GigabitEthernet0/0": {
+                101: {
+                    "type": "ethernet",
+                    "description": "SI 101 TestDescription",
+                    "encapsulation": {
+                        "type": "dot1q",
+                        "tag": 101
+                    },
+                    "service_policy": {
+                        "input": "SomeInputPolicy",
+                        "output": None
+                    }
+                }
+            },
+            "GigabitEthernet0/1": {
+                10: {
+                    "type": "ethernet",
+                    "description": "SI 10 TestDescription",
+                    "encapsulation": "untagged",
+                    "bridge_domain": 10
+                }
+            }
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
+                result = interface_line.service_instances
+                self.assertEqual(wanted_results[interface], result)
 
 if __name__ == '__main__':
     unittest.main()

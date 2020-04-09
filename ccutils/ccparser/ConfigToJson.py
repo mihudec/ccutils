@@ -62,6 +62,15 @@ class ConfigToJson:
             if interface.duplex or not self.omit_empty:
                 self.data["interfaces"][interface.name]["duplex"] = interface.duplex
 
+            # Get Interface MTU
+            if interface.mtu or not self.omit_empty:
+                self.data["interfaces"][interface.name]["mtu"] = interface.mtu
+
+            # Get Service Policies
+            if interface.service_policy != {"input": None, "output": None} or not self.omit_empty:
+                self.data["interfaces"][interface.name]["service_policy"] = interface.service_policy
+
+
 
 
             if port_mode == "l3":

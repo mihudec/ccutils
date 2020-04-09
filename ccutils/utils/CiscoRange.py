@@ -105,33 +105,48 @@ class CiscoRange(MutableSequence):
         if len(data) == len(list(filter(lambda x: re.match(pattern=self.PREFIX_REGEX, string=x), data))):
             return True
         else:
-            self.logger.error(msg="Not all items contain prefixes." )
+            self.logger.error(msg="Not all items contain prefixes.")
             return False
 
     def split_to_list(self, data):
         _list = []
         raw_list = self.split_text(text=data)
+        self.logger.debug("Raw List: {}".format(raw_list))
         if self.has_prefix(data=raw_list) and not self.check_prefix(data=data):
             self.logger.error(msg="Found prefix inconsistency in given data.")
+            self.logger.debug("Returning '{}' for data: '{}'".format(_list, data))
             return _list
         for item in raw_list:
             results = self.split_item(item)
             for res in results:
                 if res not in _list:
                     _list.append(res)
+        self.logger.debug("Returning '{}' for data: '{}'".format(_list, data))
         return _list
 
 
     def split_text(self, text):
         result = []
         if isinstance(text, list):
-            return [x.strip() for x in text if isinstance(x, str) and x != ""]
+            for item in text:
+                if isinstance(item, int):
+                    # TODO: Fix this ugliness
+                    result.append(str(item))
+                elif isinstance(item, str):
+                    if item == "":
+                        continue
+                    else:
+                        for subitem in [x.strip() for x in item.strip(",").split(",")]:
+                            result.append(subitem)
+            self.logger.debug("Text Instance: List - Returning {} for text: '{}'".format(result, text))
+            return result
         elif isinstance(text, str):
             try:
                 result = [x.strip() for x in text.strip(",").split(",")]
             except Exception as e:
                 self.logger.error(msg="{}".format(repr(e)))
             finally:
+                self.logger.debug("Text Instance: String - Returning {} for text: '{}'".format(result, text))
                 return result
         else:
             self.logger.error(msg="Unexpected data type given: {}".format(type(text)))
