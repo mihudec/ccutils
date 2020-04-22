@@ -50,11 +50,15 @@ class TestCiscoRange(unittest.TestCase):
                 "source": "Fa0, Fa0/3-6, Fa0/1-2, Fa2/1-2 Fa2/0/10-11, Fa1/0/3-4",
                 "result": ["Fa0", "Fa0/1-6", "Fa2/1-2", "Fa1/0/3-4"]
             },
+            "Test5": {
+                "source": ["128-134", 144, 152, 160, 168, 200, 202, 207, 208],
+                "result": ["128-134", "144", "152", "160", "168", "200", "202", "207", "208"]
+            }
         }
 
         for test in tests.keys():
             with self.subTest(msg=test):
-                cr = CiscoRange(tests[test]["source"], verbosity=5)
+                cr = CiscoRange(tests[test]["source"], verbosity=3)
                 print(cr.compressed_list)
                 self.assertEqual(cr.compressed_list, tests[test]["result"])
 

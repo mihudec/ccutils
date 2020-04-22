@@ -271,7 +271,11 @@ class CiscoRange(MutableSequence):
         if len(entry) == 1:
             results.append("{}{}".format(prefix, *entry))
         elif len(entry) == 2:
-            results.append("{}{}-{}".format(prefix, *entry))
+            if (entry[1] == entry[0] + 1) and prefix == "":
+                results.append("{}".format(entry[0]))
+                results.append("{}".format(entry[1]))
+            else:
+                results.append("{}{}-{}".format(prefix, *entry))
         
         return results
 
