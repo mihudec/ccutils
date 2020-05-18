@@ -9,11 +9,18 @@ class CiscoRange(MutableSequence):
     # TODO: Remove
     #PREFIX_REGEX = re.compile(pattern=r"^[A-z]{2,}")
     PREFIX_REGEX = re.compile(pattern=r"^[A-z\-]+(?=\d)", flags=re.MULTILINE)
-    SUFFIX_REGEX = re.compile(pattern=r"\d+(?:\/\d+)*(?:\s*-\s*\d+)*")
+    # SUFFIX_REGEX = re.compile(pattern=r"\d+(?:\/\d+)*(?:\s*-\s*\d+)*")
+    SUFFIX_REGEX = re.compile(pattern=r"\d.*?$")
     RANGE_REGEX = re.compile(pattern=r"\d+\s*-\s*\d+")
+    SUBINT_REGEX = re.compile(pattern=r"\.(?P<number>\d+)$")
+    # SUFFIX_REGEX = re.compile(pattern=r"\d+(?:(?:-\d+)|(?:\/\d+)+(?:(?:\s*-\s*\d+)|(?:\.\d+(?:\s*-\s*\d+)))|(?:\.\d+))?$")
+    # SUFFIX_REGEX = re.compile(pattern=r"(?P<prefix_slot>(?:\d+\/)*)(?:(?:\d+)|(?P<range>\d+\s*-\s*\d+)|(?:\d+\.(?P<subint>\d+)))$")
+
     # TODO: Remove
     #PREFIX_SLOT_REGEX = re.compile(pattern=r"(?P<prefix_slot>[A-z]{2,}(?:\d+/)*)(?P<number>\d+)")
     PREFIX_SLOT_REGEX = re.compile(pattern=r"(?P<prefix_slot>^[A-z\-]+(?=\d)(?:\d+/)*)(?P<number>\d+)", flags=re.MULTILINE)
+    # PREFIX_SLOT_REGEX = re.compile(pattern=r"(?P<prefix_slot>^[A-z\-]+(?=\d)(?:\d+\/)*(?:\d+\.)?)(?P<number>\d+)", flags=re.MULTILINE)
+
 
     def __init__(self, text, verbosity=3):
         super(CiscoRange, self).__init__()
@@ -152,28 +159,51 @@ class CiscoRange(MutableSequence):
             self.logger.error(msg="Unexpected data type given: {}".format(type(text)))
 
     def split_item(self, item):
-        match = re.match(pattern=self.PREFIX_REGEX, string=item)
-        prefix = match.group(0) if match else ""
+        self.logger.debug("Working on Item: {}".format(item))
+        prefix_search = re.match(pattern=self.PREFIX_REGEX, string=item)
+        prefix = prefix_search.group(0) if prefix_search else ""
         self.logger.debug(msg="Prefix: '{}'".format(prefix))
-        try:
-            suffix = re.search(pattern=self.SUFFIX_REGEX, string=item).group(0)
-        except AttributeError:
+        suffix_search = self.SUFFIX_REGEX.search(string=item)
+        if suffix_search:
+            suffix = suffix_search.group(0)
+            subint = self.SUBINT_REGEX.search(string=suffix).group("number") if self.SUBINT_REGEX.search(string=suffix) else None
+            int_range = self.RANGE_REGEX.search(string=suffix).group(0) if self.RANGE_REGEX.search(string=suffix) else None
+            if subint:
+                # Cut off subinterface from suffix, +1 for dot
+                suffix = suffix[:-(len(subint)+1)]
+            self.logger.debug("Prefix: {} Suffix: {} IntRange: {} SubInt: {}".format(prefix, suffix, int_range, subint))
+
+        else:
             self.logger.error("Suffix regex did not match on item: {}".format(item))
             suffix = ""
         self.logger.debug(msg="Suffix: '{}'".format(suffix))
-        match = re.search(pattern=self.RANGE_REGEX, string=suffix)
-        if match:
-            base_suffix = suffix[:len(suffix) - len(match.group(0))]
+        # Range and subinterface is not supported
+        if int_range and subint:
+            self.logger.error("Subinterfaces cannot be combined with ranges. Item: {}".format(item))
+            raise NotImplementedError("Subinterfaces cannot be combined with ranges. Item: {}".format(item))
+        elif int_range:
+            # Range, no Subinterface
+            base_suffix = suffix[:len(suffix) - len(int_range)]
             self.logger.debug(msg="Base Suffix: '{}'".format(base_suffix))
-            start = int(match.group(0).split("-")[0].strip())
-            stop = int(match.group(0).split("-")[1].strip())
+            start = int(int_range.split("-")[0].strip())
+            stop = int(int_range.split("-")[1].strip())
             ERROR = "Given invalid range: '{}'. Start is bigger than stop!".format(item)
             assert stop >= start, ERROR
             number_range = range(start, stop+1)
-            return ["{}{}{}".format(prefix, base_suffix, x) for x in number_range]
+            result = ["{}{}{}".format(prefix, base_suffix, x) for x in number_range]
+            self.logger.debug("Result: {}".format(result))
+            return result
         else:
-            return ["{}{}".format(prefix, suffix)]
-
+            # Subinterface, no Range
+            if subint:
+                result = ["{}{}.{}".format(prefix, suffix, subint)]
+                self.logger.debug("Result: {}".format(result))
+                return result
+            # No Subinterface, no Range
+            else:
+                result = ["{}{}".format(prefix, suffix)]
+                self.logger.debug("Result: {}".format(result))
+                return result
 
     def sort_list(self, data):
         if self.has_prefix(data=data):
@@ -181,15 +211,21 @@ class CiscoRange(MutableSequence):
             temp_list = []
             # Split item to list of prefixes and suffixes
             for item in data:
+                prefix = self.PREFIX_REGEX.search(string=item).group(0)
+                subint_search = self.SUBINT_REGEX.search(string=item)
+                subint = subint_search.group("number") if subint_search else None
+                suffix_list = []
+                if subint:
+                    suffix_list = [int(x) for x in self.SUFFIX_REGEX.search(string=item).group(0)[:-(len(subint)+1)].split("/")]
+                else:
+                    suffix_list = [int(x) for x in self.SUFFIX_REGEX.search(string=item).group(0).split("/")]
                 temp_list.append([
-                    re.search(pattern=self.PREFIX_REGEX, string=item).group(0),
-                    re.search(pattern=self.SUFFIX_REGEX, string=item).group(0).split("/")
+                    prefix,
+                    suffix_list,
+                    int(subint) if subint is not None else None
                 ])
             self.logger.debug(msg="TempList: {}".format(temp_list))
-            suffix_lengths = []
-            for item in temp_list:
-                if len(item[1]) not in suffix_lengths:
-                    suffix_lengths.append(len(item[1]))
+            suffix_lengths = list(set([len(x[1]) for x in temp_list]))
             suffix_lengths.sort()
             # Get items with same suffix length
             for suffix_length in suffix_lengths:
@@ -201,14 +237,20 @@ class CiscoRange(MutableSequence):
                     reverse_suffix = list(item[1])
                     reverse_suffix.reverse()
                     for index, value in enumerate(reverse_suffix):
-                        number += int(value) * 100**index
+                        number += int(100*value) * 100**(index+1)
+                    if item[2] is not None:
+                        number += item[2]
                     item.append(number)
+                    self.logger.debug("Prefix: {} SuffixList: {}, SubInt: {}, Value: {} ".format(*item))
                 sorted_items = list(items)
-                sorted_items.sort(key=lambda x: x[2])
+                sorted_items.sort(key=lambda x: x[3])
                 # Remove numeric value
                 for item in sorted_items:
-                    del item[2]
-                    results.append("{}{}".format(item[0], "/".join(item[1])))
+                    del item[3]
+                    if item[2] is None:
+                        results.append("{}{}".format(item[0], "/".join([str(x) for x in item[1]])))
+                    else:
+                        results.append("{}{}.{}".format(item[0], "/".join([str(x) for x in item[1]]), str(item[2])))
                 self.logger.debug(msg="SortedItems: {}".format(sorted_items))
 
             self.logger.debug(msg="Results: {}".format(results))
@@ -228,6 +270,11 @@ class CiscoRange(MutableSequence):
             match = re.match(pattern=self.PREFIX_SLOT_REGEX, string=item)
             if match:
                 current_prefix = match.group("prefix_slot")
+                subint_search = self.SUBINT_REGEX.search(string=item)
+                subint = subint_search.group("number") if subint_search else None
+                if subint is not None:
+                    results.append(item)
+                    continue
                 item = int(match.group("number"))
             else:
                 item = int(item)
