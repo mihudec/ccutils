@@ -12,9 +12,9 @@ class TestBaseConfigParser(unittest.TestCase):
         }
         for test in wanted_results.keys():
             with self.subTest(msg=test):
-                config = BaseConfigParser(config=pathlib.Path(__file__).joinpath("../resources/{}.txt".format(test)))
+                config = BaseConfigParser(config=pathlib.Path(__file__).parent.joinpath("resources/{}.txt".format(test)))
                 print(config.lines)
-                result = json.loads(pathlib.Path(__file__).joinpath("../results/{}.json".format(test)).read_text())
+                result = json.loads(pathlib.Path(__file__).parent.joinpath("results/{}.json".format(test)).read_text())
                 print(config.vlans)
                 print(result)
                 self.assertDictEqual(config.vlans, result)
