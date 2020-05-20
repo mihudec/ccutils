@@ -13,11 +13,11 @@ class TestConfigToJson(unittest.TestCase):
         }
         for hostname in wanted_results.keys():
             with self.subTest(msg=hostname):
-                config = BaseConfigParser(config=pathlib.Path(__file__).joinpath("../resources/{}.txt".format(hostname)))
+                config = BaseConfigParser(config=pathlib.Path(__file__).parent.joinpath("resources/{}.txt".format(hostname)))
                 ctj = ConfigToJson(config=config, omit_empty=wanted_results[hostname]["omit_empty"], verbosity=5)
                 print(ctj.to_json())
                 print(ctj.to_yaml())
-                result = json.loads(pathlib.Path(__file__).joinpath("../results/{}.json".format(hostname)).read_text())
+                result = json.loads(pathlib.Path(__file__).parent.joinpath("results/{}.json".format(hostname)).read_text())
                 self.assertDictEqual(ctj.data, result)
 
 if __name__ == '__main__':
