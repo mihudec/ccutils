@@ -28,6 +28,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Show Folder Structure
+      run: ls -la ./tests
     - name: Test with UnitTest
       run: |
         python -m unittest discover -s ./tests -p "test_*.py"
