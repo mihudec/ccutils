@@ -5,7 +5,7 @@ from ccutils.ccparser import BaseConfigParser
 
 
 class TestL2Interface(unittest.TestCase):
-    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_l2_test.txt")
+    test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_l2_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_switchport_mode(self):
@@ -60,7 +60,7 @@ class TestL2Interface(unittest.TestCase):
                 self.assertEqual(wanted_results[interface], result)
 
     def test_storm_control(self):
-        wanted_results = json.loads(pathlib.Path(__file__).joinpath("../results/test_storm_control.json").read_text())
+        wanted_results = json.loads(pathlib.Path(__file__).parent.joinpath("results/test_storm_control.json").read_text())
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
                 interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
@@ -69,7 +69,7 @@ class TestL2Interface(unittest.TestCase):
 
 
 class TestL3Interface(unittest.TestCase):
-    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_l3_test.txt")
+    test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_l3_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_encapsulation(self):
@@ -115,7 +115,7 @@ class TestL3Interface(unittest.TestCase):
                 self.assertEqual(wanted_results[interface], result)
 
 class TestTunnelInterface(unittest.TestCase):
-    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_tunnel_test.txt")
+    test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_tunnel_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_interface_tunnel_properties_1(self):
@@ -183,7 +183,7 @@ class TestTunnelInterface(unittest.TestCase):
 
 
 class TestServiceInstances(unittest.TestCase):
-    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_service_instances_test.txt")
+    test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_service_instances_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_interface_service_instances_1(self):
