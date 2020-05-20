@@ -14,7 +14,6 @@ class BaseInterfaceLine(BaseConfigLine):
     _description_regex = re.compile(pattern=r"^\sdescription\s(?P<description>.*)")
     _vrf_regex = re.compile(pattern=r"^(?:\sip)?\svrf\sforwarding\s(?P<vrf>\S+)", flags=re.MULTILINE)
     _shutdown_regex = re.compile(pattern=r"^\sshutdown", flags=re.MULTILINE)
-    _ospf_priority_regex = re.compile(pattern=r"^\sip\sospf\spriority\s(?P<ospf_priority>\d+)", flags=re.MULTILINE)
     _cdp_regex = re.compile(pattern=r"cdp enable")
     _logging_event_regex = re.compile(pattern=r"^\slogging\sevent\s(?P<logging_event>\S+)", flags=re.MULTILINE)
 
@@ -47,6 +46,7 @@ class BaseInterfaceLine(BaseConfigLine):
     _ip_tcp_mss_regex = re.compile(pattern=r"^ ip tcp adjust-mss (?P<tcp_mss>\d+)", flags=re.MULTILINE)
     _keepalive_regex = re.compile(pattern=r"^ keepalive (?P<period>\d+) (?P<retries>\d+)")
 
+
     _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<policy_map>\S+)", flags=re.MULTILINE)
     _tunnel_src_regex = re.compile(pattern=r"^ tunnel source (?P<source>\S+)", flags=re.MULTILINE)
     _tunnel_dest_regex = re.compile(pattern=r"^ tunnel destination (?P<destination>\S+)", flags=re.MULTILINE)
@@ -65,6 +65,11 @@ class BaseInterfaceLine(BaseConfigLine):
     _service_instance_encapsulation_string_regex = re.compile(pattern=r"^  encapsulation (?P<encapsulation>\S+)$", flags=re.MULTILINE)
     _service_instance_bridge_domain_regex = re.compile(pattern=r"^  bridge-domain (?P<number>\d+)$", flags=re.MULTILINE)
     _service_instance_service_policy_regex = re.compile(pattern=r"^  service-policy (?P<direction>input|output) (?P<policy_map>\S+)$", flags=re.MULTILINE)
+
+    _ospf_process_regex = re.compile(pattern=r"^ ip ospf (?P<process_id>\d+) area (?P<area>\d+)$", flags=re.MULTILINE)
+    _ospf_network_type_regex = re.compile(pattern=r"^ ip ospf network (?P<network_type>\S+)", flags=re.MULTILINE)
+    _ospf_priority_regex = re.compile(pattern=r"^\sip\sospf\spriority\s(?P<priority>\d+)", flags=re.MULTILINE)
+
 
 
 
@@ -138,6 +143,7 @@ class BaseInterfaceLine(BaseConfigLine):
             self._tunnel_ipsec_profile_regex,
             self._storm_control_threshold_regex,
             self._storm_control_action_regex,
+            self._encapsulation_regex,
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
             re.compile(pattern=r"^ spanning-tree portfast")
@@ -332,11 +338,59 @@ class BaseInterfaceLine(BaseConfigLine):
             int: OSPF Priority or None
 
         """
+        self.logger.warning("DEPRECATED: You are using deprecated property .ospf_priority, use .ospf['priority'] instead.")
         ospf_priority = None
-        candidates = self.re_search_children(regex=self._ospf_priority_regex, group="ospf_priority")
+        candidates = self.re_search_children(regex=self._ospf_priority_regex, group="priority")
         if len(candidates):
             ospf_priority = int(candidates[0])
         return ospf_priority
+
+    @property
+    @functools.lru_cache()
+    def ospf(self):
+        """
+        Return OSPF interface parameters
+
+        Returns:
+            dict: OSPF parameters
+
+            Example::
+
+                {"process_id": 1, "area": 0, "network_type": "point-to-point", "priority": 200}
+
+            Returns ``None`` if absent
+
+        """
+        ospf = None
+        # OSPF Process Section
+        candidates = self.re_search_children(regex=self._ospf_process_regex, group="ALL")
+        if len(candidates):
+            ospf = candidates[0]
+            ospf["process_id"] = int(ospf["process_id"])
+            ospf["area"] = int(ospf["area"])
+        # OSPF Network Type Section
+        candidates = self.re_search_children(regex=self._ospf_network_type_regex, group="ALL")
+        if len(candidates):
+            if ospf is None:
+                ospf = {k: None for k in self._ospf_process_regex.groupindex.keys() if isinstance(k, str)}
+            ospf.update(candidates[0])
+        else:
+            if ospf is not None:
+                ospf.update({k: None for k in self._ospf_network_type_regex.groupindex.keys()})
+        # OSPF Priority Section
+        candidates = self.re_search_children(regex=self._ospf_priority_regex, group="ALL")
+        if len(candidates):
+            if ospf is None:
+                ospf = {k: None for k in self._ospf_process_regex.groupindex.keys() if isinstance(k, str)}
+                ospf.update({k: None for k in self._ospf_network_type_regex.groupindex.keys()})
+            ospf.update(candidates[0])
+            # Convert priority to int
+            ospf["priority"] = int(ospf["priority"])
+        else:
+            if ospf is not None:
+                ospf.update({k: None for k in self._ospf_priority_regex.groupindex.keys()})
+
+        return ospf
 
     @property
     @functools.lru_cache()
@@ -461,6 +515,30 @@ class BaseInterfaceLine(BaseConfigLine):
         if len(candidates):
             trunk_encapsulation = candidates[0]
         return trunk_encapsulation
+
+    @property
+    @functools.lru_cache()
+    def encapsulation(self):
+        """
+        Return encapsulation type and tag for subinterfaces
+
+        Returns:
+            dict: Encapsualtion parameters
+
+            Example::
+
+                {"type": "dot1q", "tag": 10, "native": False}
+
+            Returns ``None`` if absent
+
+        """
+        encapsulation = None
+        candidates = self.re_search_children(regex=self._encapsulation_regex, group="ALL")
+        if len(candidates):
+            encapsulation = candidates[0]
+            encapsulation["tag"] = int(encapsulation["tag"])
+            encapsulation["native"] = True if encapsulation["native"] == "native" else False
+        return encapsulation
 
     @property
     @functools.lru_cache()

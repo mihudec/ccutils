@@ -1,0 +1,11 @@
+interface Port-channel1.2500
+ encapsulation dot1q 2500
+ ip ospf network point-to-point
+ ip ospf priority 200
+!
+interface GigabitEthernet1/0/1.99
+ encapsulation dot1q 99 native
+ ip ospf 1 area 0
+!
+interface Loopback0
+!

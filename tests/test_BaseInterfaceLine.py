@@ -5,7 +5,7 @@ from ccutils.ccparser import BaseConfigParser
 
 
 class TestL2Interface(unittest.TestCase):
-    test_file_path = pathlib.Path("./resources/interface_l2_test.txt")
+    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_l2_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_switchport_mode(self):
@@ -60,7 +60,7 @@ class TestL2Interface(unittest.TestCase):
                 self.assertEqual(wanted_results[interface], result)
 
     def test_storm_control(self):
-        wanted_results = json.loads(pathlib.Path(r"./results/test_storm_control.json").read_text())
+        wanted_results = json.loads(pathlib.Path(__file__).joinpath("../results/test_storm_control.json").read_text())
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
                 interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
@@ -69,51 +69,53 @@ class TestL2Interface(unittest.TestCase):
 
 
 class TestL3Interface(unittest.TestCase):
-    test_file_path = pathlib.Path("./resources/interface_tunnel_test.txt")
+    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_l3_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
-    def test_keepalive(self):
+    def test_encapsulation(self):
         wanted_results = {
-            "Tunnel0": {
-                "period": 1,
-                "retries": 3
+            "Port-channel1.2500": {
+                "type": "dot1q",
+                "tag": 2500,
+                "native": False
             },
-            "Tunnel1": None
+            "GigabitEthernet1/0/1.99": {
+                "type": "dot1q",
+                "tag": 99,
+                "native": True
+            },
+            "Loopback0": None
         }
-
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
                 interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
-                result = interface_line.keepalive
+                result = interface_line.encapsulation
                 self.assertEqual(wanted_results[interface], result)
 
-    def test_tcp_mss(self):
+    def test_ospf(self):
         wanted_results = {
-            "Tunnel0": 1360,
-            "Tunnel1": None
+            "Port-channel1.2500": {
+                "process_id": None,
+                "area": None,
+                "network_type": "point-to-point",
+                "priority": 200
+            },
+            "GigabitEthernet1/0/1.99": {
+                "process_id": 1,
+                "area": 0,
+                "network_type": None,
+                "priority": None
+            },
+            "Loopback0": None
         }
-
         for interface in wanted_results.keys():
             with self.subTest(msg=interface):
                 interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
-                result = interface_line.tcp_mss
+                result = interface_line.ospf
                 self.assertEqual(wanted_results[interface], result)
-
-    def test_ip_mtu(self):
-        wanted_results = {
-            "Tunnel0": 1400,
-            "Tunnel1": None
-        }
-
-        for interface in wanted_results.keys():
-            with self.subTest(msg=interface):
-                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
-                result = interface_line.ip_mtu
-                self.assertEqual(wanted_results[interface], result)
-
 
 class TestTunnelInterface(unittest.TestCase):
-    test_file_path = pathlib.Path("./resources/interface_tunnel_test.txt")
+    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_tunnel_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_interface_tunnel_properties_1(self):
@@ -140,9 +142,48 @@ class TestTunnelInterface(unittest.TestCase):
                 result = interface_line.tunnel_properties
                 self.assertEqual(wanted_results[interface], result)
 
+    def test_tcp_mss(self):
+        wanted_results = {
+            "Tunnel0": 1360,
+            "Tunnel1": None
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
+                result = interface_line.tcp_mss
+                self.assertEqual(wanted_results[interface], result)
+
+    def test_ip_mtu(self):
+        wanted_results = {
+            "Tunnel0": 1400,
+            "Tunnel1": None
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
+                result = interface_line.ip_mtu
+                self.assertEqual(wanted_results[interface], result)
+
+    def test_keepalive(self):
+        wanted_results = {
+            "Tunnel0": {
+                "period": 1,
+                "retries": 3
+            },
+            "Tunnel1": None
+        }
+
+        for interface in wanted_results.keys():
+            with self.subTest(msg=interface):
+                interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
+                result = interface_line.keepalive
+                self.assertEqual(wanted_results[interface], result)
+
 
 class TestServiceInstances(unittest.TestCase):
-    test_file_path = pathlib.Path("./resources/interface_service_instances_test.txt")
+    test_file_path = pathlib.Path(__file__).joinpath("../resources/interface_service_instances_test.txt")
     config = BaseConfigParser(config=test_file_path)
 
     def test_interface_service_instances_1(self):

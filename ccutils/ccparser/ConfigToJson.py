@@ -82,21 +82,29 @@ class ConfigToJson:
                 else:
                     self.data["interfaces"][interface.name]["l3"]["ip_addresses"] = []
                 # Get VRF
-                self.data["interfaces"][interface.name]["l3"]["vrf"] = interface.vrf
+                if interface.vrf or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["vrf"] = interface.vrf
+                # TODO: Remove "ospf_priority"
                 # Get OSPF Priority
-                self.data["interfaces"][interface.name]["l3"]["ospf_priority"] = interface.ospf_priority
+                # self.data["interfaces"][interface.name]["l3"]["ospf_priority"] = interface.ospf_priority
                 # Get standby
-                self.data["interfaces"][interface.name]["l3"]["standby"] = interface.standby
+                if interface.standby or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["standby"] = interface.standby
                 if self.data["interfaces"][interface.name]["l3"]["standby"]:
                     self.data["interfaces"][interface.name]["flags"].append("standby")
                 # Get Helper Address
-                self.data["interfaces"][interface.name]["l3"]["helper_addresses"] = interface.helper_address
+                if interface.helper_address or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["helper_addresses"] = interface.helper_address
                 ip_mtu = interface.ip_mtu
                 tcp_mss = interface.tcp_mss
-                if ip_mtu:
+                if ip_mtu or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["ip_mtu"] = ip_mtu
-                if tcp_mss:
+                if tcp_mss or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["tcp_mss"] = tcp_mss
+                if interface.encapsulation or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["encapsulation"] = interface.encapsulation
+                if interface.ospf or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["ospf"] = interface.ospf
 
             elif port_mode == "l2":
 
@@ -205,7 +213,9 @@ class ConfigToJson:
             import yaml
 
             class CustomDumper(yaml.Dumper):
-                pass
+
+                def increase_indent(self, flow=False, indentless=False):
+                    return super(CustomDumper, self).increase_indent(flow=flow, indentless=False)
 
         except ImportError:
             self.logger.error("Missing Package PyYAML. Please install it by running 'pip3 install pyyaml'")

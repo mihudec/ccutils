@@ -287,7 +287,7 @@ class BaseConfigParser(object):
     @property
     def domain_name(self):
         domain_name = None
-        domain_name_regex = re.compile(pattern=r"^ip domain-name (?P<domain_name>\S+)", flags=re.MULTILINE)
+        domain_name_regex = re.compile(pattern=r"^ip domain.name (?P<domain_name>\S+)", flags=re.MULTILINE)
         candidates = self.find_objects(regex=domain_name_regex)
         if len(candidates):
             domain_name = candidates[0].re_search(regex=domain_name_regex, group="domain_name")
@@ -296,7 +296,7 @@ class BaseConfigParser(object):
     @property
     def name_servers(self):
         name_servers = []
-        name_servers_regex = re.compile(pattern=r"^ip name-server (?P<name_server>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
+        name_servers_regex = re.compile(pattern=r"^ip name.server (?P<name_server>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
         candidates = self.find_objects(regex=name_servers_regex)
         for candidate in candidates:
             name_servers.append(candidate.re_search(regex=name_servers_regex, group="name_server"))
@@ -320,7 +320,6 @@ class BaseConfigParser(object):
         candidates = self.find_objects(regex=self._vlan_configuration_regex)
         for candidate in candidates:
             vlan_range = CiscoRange(candidate.re_search(regex=self._vlan_configuration_regex, group="vlan_range"))
-            print(vlan_range)
             policy = candidate.re_search_children(regex=self._device_tracking_attach_policy_regex, group="policy")
             if len(policy):
                 for vlan_id in vlan_range:
