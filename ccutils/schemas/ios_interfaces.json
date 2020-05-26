@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/mihudec/ccutils/schemas/ios_interfaces",
+  "title": "Interfaces Dictionary Schema",
+  "definitions": {
+    "interfaceOrNull": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://github.com/mihudec/ccutils/schemas/ios_interface"
+        }
+      ]
+    }
+  },
+  "patternProperties": {
+    "[A-z]{2}[A-z\\-]*\\d+(?:\/\\d+)*(?:\\.\\d+)?": {
+      "$ref": "#/definitions/interfaceOrNull"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/mihudec/ccutils/schemas/ios_interface",
+  "type": "object",
+  "properties": {
+    "flags": {
+      "$ref": "#/definitions/flags"
+    },
+    "description": {
+      "$ref": "#/definitions/description"
+    },
+    "l2": {
+      "$ref": "https://github.com/mihudec/ccutils/schemas/ios_interface_l2"
+    },
+    "l3": {
+      "$ref": "#/definitions/l3"
+    },
+    "channel_group": {
+      "$ref": "#/definitions/channel_group"
+    }
+  },
+  "definitions": {
+    "vlanId": {
+      "$ref": "https://github.com/mihudec/ccutils/schemas/vlanId"
+    },
+    "flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "description": {
+      "type": "string"
+    },
+    "l3": {
+      "type": "object"
+    },
+    "channel_group": {
+      "type": "object",
+      "properties": {
+        "channel_group_number": {
+          "type": "integer"
+        },
+        "channel_group_mode": {
+          "enum": [
+            "active",
+            "passive",
+            "on"
+          ]
+        }
+      },
+      "required": [
+        "channel_group_number",
+        "channel_group_mode"
+      ]
+    },
+    "flagL2IsPresent": {
+      "properties": {
+        "flags": {
+          "contains": {
+            "type": "string",
+            "pattern": "l2"
+          }
+        }
+      }
+    },
+    "flagL3IsPresent": {
+      "properties": {
+        "flags": {
+          "contains": {
+            "type": "string",
+            "pattern": "l3"
+          }
+        }
+      }
+    },
+    "flagPcMemberIsPresent": {
+      "properties": {
+        "flags": {
+          "contains": {
+            "type": "string",
+            "pattern": "pc-member"
+          }
+        }
+      }
+    },
+    "flagPortChannelIsPresent": {
+      "properties": {
+        "flags": {
+          "contains": {
+            "type": "string",
+            "pattern": "port-channel"
+          }
+        }
+      }
+    },
+    "L2IsRequired": {
+      "required": [
+        "l2"
+      ]
+    },
+    "L2IsPresent": {
+      "required": [
+        "l2"
+      ]
+    },
+    "L3IsRequired": {
+      "required": [
+        "l3"
+      ]
+    },
+    "L3IsPresent": {
+      "required": [
+        "l3"
+      ]
+    },
+    "ChannelGroupIsRequired": {
+      "required": [
+        "channel_group"
+      ]
+    },
+    "channelGroupIsPresent": {
+      "required": [
+        "channel_group"
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "anyOf": [
+        {
+          "not": {
+            "$ref": "#/definitions/flagL2IsPresent"
+          }
+        },
+        {
+          "not": {
+            "$ref": "#/definitions/flagL3IsPresent"
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/flagL2IsPresent"
+        },
+        {
+          "not": {
+            "$ref": "#/definitions/L2IsPresent"
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/flagL3IsPresent"
+        },
+        {
+          "not": {
+            "$ref": "#/definitions/L3IsPresent"
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "not": {
+            "$ref": "#/definitions/flagPcMemberIsPresent"
+          }
+        },
+        {
+          "not": {
+            "$ref": "#/definitions/flagPortChannelIsPresent"
+          }
+        }
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/flagPcMemberIsPresent"
+        },
+        {
+          "not": {
+            "$ref": "#/definitions/channelGroupIsPresent"
+          }
+        }
+      ]
+    }
+  ]
+}

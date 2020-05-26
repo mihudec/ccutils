@@ -38,7 +38,7 @@ class TestCiscoRange(unittest.TestCase):
         for test in tests.keys():
             with self.subTest(msg=test):
                 cr = CiscoRange(tests[test]["source"], verbosity=5)
-                print(list(cr))
+                # print(list(cr))
                 self.assertSequenceEqual(list(cr), tests[test]["result"])
 
     def test_compressed(self):
@@ -76,7 +76,7 @@ class TestCiscoRange(unittest.TestCase):
         for test in tests.keys():
             with self.subTest(msg=test):
                 cr = CiscoRange(tests[test]["source"], verbosity=3)
-                print(cr.compressed_list)
+                # print(cr.compressed_list)
                 self.assertEqual(cr.compressed_list, tests[test]["result"])
 
 if __name__ == '__main__':

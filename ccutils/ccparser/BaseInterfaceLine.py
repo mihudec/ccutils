@@ -29,7 +29,7 @@ class BaseInterfaceLine(BaseConfigLine):
 
     _native_vlan_regex = re.compile(pattern=r"^ switchport trunk native vlan (?P<native_vlan>\d+)", flags=re.MULTILINE)
     _trunk_encapsulation_regex = re.compile(pattern=r"^ switchport trunk encapsulation (?P<encapsulation>dot1q|isl|negotiate)", flags=re.MULTILINE)
-    _switchport_mode_regex = re.compile(pattern=r"^ switchport mode (?P<switchport_mode>access|trunk|dot1q-tunnel|private-vlan)")
+    _switchport_mode_regex = re.compile(pattern=r"^ switchport mode (?P<switchport_mode>access|trunk|dot1q-tunnel|private-vlan|dynamic)")
     _switchport_nonegotiate_regex = re.compile(pattern=r"^ switchport nonegotiate")
     _trunk_allowed_vlans_regex = re.compile(pattern=r"^ switchport trunk allowed vlan(?: add)? (?P<allowed_vlans>\S+)", flags=re.MULTILINE)
     _access_vlan_regex = re.compile(pattern=r"^ switchport access vlan (?P<access_vlan>\d+)", flags=re.MULTILINE)
@@ -825,7 +825,7 @@ class BaseInterfaceLine(BaseConfigLine):
                 service_policy["input"] = candidate["policy_map"]
             elif candidate["direction"] == "output":
                 service_policy["output"] = candidate["policy_map"]
-        print(candidates)
+        # print(candidates)
         return service_policy
 
     @property
@@ -875,7 +875,7 @@ class BaseInterfaceLine(BaseConfigLine):
 
 
 
-        print(service_instances)
+        # print(service_instances)
         return service_instances
 
     @property

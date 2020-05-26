@@ -1,0 +1,6 @@
+{
+  "$id": "https://github.com/mihudec/ccutils/schemas/vlanId",
+  "type": "integer",
+  "minimum": 1,
+  "maximum": 4094
+}

@@ -11,7 +11,7 @@ class BaseConfigLine(object):
     _parent_indent_regex = re.compile(pattern=r"[^! ]", flags=re.MULTILINE)
     _child_indent_regex = re.compile(pattern=r"^ \S", flags=re.MULTILINE)
     _grandchild_indent_regex = re.compile(pattern=r"^  \S", flags=re.MULTILINE)
-    comment_regex = re.compile(pattern=r"^(\s+)?!", flags=re.MULTILINE)
+    comment_regex = re.compile(pattern=r"^(\s+)?!.*", flags=re.MULTILINE)
     _interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
 
     def __init__(self, number, text, config, verbosity=3):
@@ -63,6 +63,32 @@ class BaseConfigLine(object):
                 children.append(self.config.lines[line_num])
                 line_num += 1
         return children
+
+    @property
+    def get_parent(self):
+        if not self.is_child:
+            self.logger.debug("Line is not a child, therefore has no parent. Line: {}".format(self.text))
+            return None
+        else:
+            line_num = int(self.number) - 1
+            line = self.config.lines[line_num]
+            while line.indent >= self.indent and line_num > 0:
+                line_num -= 1
+                line = self.config.lines[line_num]
+            return line
+
+    @property
+    def get_parents(self):
+        parents = []
+        if not self.is_child:
+            self.logger.debug("Line is not a child, therefore has no parent. Line: {}".format(self.text))
+            pass
+        else:
+            parents.insert(0, self.get_parent)
+            while parents[0].get_parent is not None:
+                parents.insert(0, parents[0].get_parent)
+
+        return parents
 
     def re_search_children(self, regex, group=None):
         """
@@ -249,14 +275,18 @@ class BaseConfigLine(object):
 
         """
         types = []
+        if re.match(self.comment_regex, self.text):
+            types.append("comment")
+            # If line is comment, it's comment only
+            return types
         if self.is_parent:
             types.append("parent")
         if self.is_child:
             types.append("child")
         if self.is_interface:
             types.append("interface")
-        if re.match(self.comment_regex, self.text):
-            types.append("comment")
+        # if re.match(self.comment_regex, self.text):
+        #     types.append("comment")
         return types
 
     @property
