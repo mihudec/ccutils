@@ -68,7 +68,8 @@ class BaseInterfaceLine(BaseConfigLine):
 
     _ospf_process_regex = re.compile(pattern=r"^ ip ospf (?P<process_id>\d+) area (?P<area>\d+)$", flags=re.MULTILINE)
     _ospf_network_type_regex = re.compile(pattern=r"^ ip ospf network (?P<network_type>\S+)", flags=re.MULTILINE)
-    _ospf_priority_regex = re.compile(pattern=r"^\sip\sospf\spriority\s(?P<priority>\d+)", flags=re.MULTILINE)
+    _ospf_priority_regex = re.compile(pattern=r"^ ip ospf priority (?P<priority>\d+)", flags=re.MULTILINE)
+    _ospf_cost_regex = re.compile(pattern=r"^ ip ospf cost (?P<cost>\d+)", flags=re.MULTILINE)
 
 
 
@@ -110,6 +111,9 @@ class BaseInterfaceLine(BaseConfigLine):
             self._vrf_regex,
             self._shutdown_regex,
             self._ospf_priority_regex,
+            self._ospf_process_regex,
+            self._ospf_network_type_regex,
+            self._ospf_cost_regex,
             self._cdp_regex,
             self._logging_event_regex,
             self._standby_ip_regex,
@@ -389,6 +393,20 @@ class BaseInterfaceLine(BaseConfigLine):
         else:
             if ospf is not None:
                 ospf.update({k: None for k in self._ospf_priority_regex.groupindex.keys()})
+        # OSPF Cost Section
+        candidates = self.re_search_children(regex=self._ospf_cost_regex, group="ALL")
+        if len(candidates):
+            if ospf is None:
+                ospf = {k: None for k in self._ospf_process_regex.groupindex.keys() if isinstance(k, str)}
+                ospf.update({k: None for k in self._ospf_network_type_regex.groupindex.keys()})
+                ospf.update({k: None for k in self._ospf_priority_regex.groupindex.keys()})
+            ospf.update(candidates[0])
+            # Convert cost to int
+            ospf["cost"] = int(ospf["cost"])
+        else:
+            if ospf is not None:
+                ospf.update({k: None for k in self._ospf_cost_regex.groupindex.keys()})
+
 
         return ospf
 

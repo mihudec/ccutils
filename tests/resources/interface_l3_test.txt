@@ -6,6 +6,7 @@ interface Port-channel1.2500
 interface GigabitEthernet1/0/1.99
  encapsulation dot1q 99 native
  ip ospf 1 area 0
+ ip ospf cost 100
 !
 interface Loopback0
 !

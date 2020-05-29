@@ -98,13 +98,15 @@ class TestL3Interface(unittest.TestCase):
                 "process_id": None,
                 "area": None,
                 "network_type": "point-to-point",
-                "priority": 200
+                "priority": 200,
+                "cost": None
             },
             "GigabitEthernet1/0/1.99": {
                 "process_id": 1,
                 "area": 0,
                 "network_type": None,
-                "priority": None
+                "priority": None,
+                "cost": 100
             },
             "Loopback0": None
         }
