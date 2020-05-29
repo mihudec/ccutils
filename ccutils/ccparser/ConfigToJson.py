@@ -90,8 +90,8 @@ class ConfigToJson:
                 # Get standby
                 if interface.standby or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["standby"] = interface.standby
-                if self.data["interfaces"][interface.name]["l3"]["standby"]:
-                    self.data["interfaces"][interface.name]["flags"].append("standby")
+                    if self.data["interfaces"][interface.name]["l3"]["standby"] is not None:
+                        self.data["interfaces"][interface.name]["flags"].append("standby")
                 # Get Helper Address
                 if interface.helper_address or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["helper_addresses"] = interface.helper_address
