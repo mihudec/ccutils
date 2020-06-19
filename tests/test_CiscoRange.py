@@ -69,13 +69,21 @@ class TestCiscoRange(unittest.TestCase):
                            "GigabitEthernet0/2/0", "GigabitEthernet0/2/1", "GigabitEthernet0"],
                 "result": ["Port-channel1.2500", "GigabitEthernet0", "Loopback250", "GigabitEthernet0/0/0-2",
                            "Cellular0/1/0-1", "GigabitEthernet0/2/0-1"]
-
+            },
+            "Test7": {
+                "source": ["Serial0/1/0:0"],
+                "result": ["Serial0/1/0:0"]
+            },
+            "Test8": {
+                "source": ["Serial0/1/0:0.20", "Serial0/1/0:0.10"],
+                "result": ["Serial0/1/0:0.10", "Serial0/1/0:0.20"]
             }
         }
 
         for test in tests.keys():
             with self.subTest(msg=test):
-                cr = CiscoRange(tests[test]["source"], verbosity=3)
+                print("\n\nWorking on test: {}\n\n".format(test))
+                cr = CiscoRange(tests[test]["source"], verbosity=5)
                 # print(cr.compressed_list)
                 self.assertEqual(cr.compressed_list, tests[test]["result"])
 

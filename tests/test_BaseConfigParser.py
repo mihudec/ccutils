@@ -19,5 +19,36 @@ class TestBaseConfigParser(unittest.TestCase):
                 # print(result)
                 self.assertDictEqual(config.vlans, result)
 
+
+    def test_section_by_parents(self):
+
+        text1 = """
+interface GigabitEthernet1/0/1
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/2
+ switchport mode access
+ switchport access vlan 10
+!
+"""
+        text2 = """
+interface GigabitEthernet1/0/1
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/2
+ switchport mode access
+ switchport access vlan 10
+!
+interface GigabitEthernet1/0/3
+!
+"""
+        config1 = BaseConfigParser(config=text1, verbosity=5)
+        result = config1.get_section_by_parents(["interface GigabitEthernet1/0/2"])
+        print(result)
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

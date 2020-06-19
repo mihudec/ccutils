@@ -100,7 +100,7 @@ class BaseConfigParser(object):
             # Determine Config Type
             if isinstance(self.config, list):
                 self.logger.debug(msg="Treating config as list of config lines.")
-                config_lines = self.config
+                config_lines = [x for x in self.config if (isinstance(x, str) and x != "")]
             elif isinstance(self.config, str):
                 path = None
                 if os.path.exists(self.config):
@@ -109,15 +109,15 @@ class BaseConfigParser(object):
                     self.logger.debug(msg="Treating config as filepath.")
                     path = self._check_path(filepath=path)
                     if path:
-                        config_lines = path.read_text().split("\n")
+                        config_lines = [x for x in path.read_text().split("\n") if x != ""]
                 else:
                     self.logger.debug(msg="Treating config as multi-line string.")
-                    config_lines = self.config.split("\n")
+                    config_lines = [x for x in self.config.split("\n") if x != ""]
             elif isinstance(self.config, pathlib.Path):
                 self.logger.debug(msg="Treating config as pathlib Path.")
                 path = self._check_path(filepath=self.config)
                 if path:
-                    config_lines = path.read_text().split("\n")
+                    config_lines = [x for x in path.read_text().split("\n") if x != ""]
             else:
                 self.logger.error("Invalid value passed as config argument.")
                 raise ValueError("Invalid value passed as config argument.")
@@ -266,6 +266,25 @@ class BaseConfigParser(object):
                 results.append(line)
         self.logger.debug(msg="Matched {} lines for query '{}'".format(len(results), regex))
         return results
+
+    def get_section_by_parents(self, parents):
+        if not isinstance(parents, list):
+            parents = list(parents)
+        section = list(self.lines)
+        for parent in parents:
+            section = [x.get_children() for x in section if bool(x.is_parent and x.re_match(parent))]
+            if len(section) == 1:
+                section = section[0]
+            elif len(section) > 1:
+                self.logger.error("Multiple lines matched parent statement. Cannot determine config section.")
+                return []
+            else:
+                self.logger.error("No lines matched parent statement. Cannot determine config section.")
+                return []
+        return section
+
+
+
 
     @property
     def hostname(self):

@@ -2,6 +2,7 @@ import pathlib
 import re
 import json
 import timeit
+import functools
 from ccutils.utils.common_utils import get_logger
 
 
@@ -78,7 +79,9 @@ class BaseConfigLine(object):
             return line
 
     @property
+    @functools.lru_cache()
     def get_parents(self):
+        start = timeit.default_timer()
         parents = []
         if not self.is_child:
             self.logger.debug("Line is not a child, therefore has no parent. Line: {}".format(self.text))
@@ -87,7 +90,8 @@ class BaseConfigLine(object):
             parents.insert(0, self.get_parent)
             while parents[0].get_parent is not None:
                 parents.insert(0, parents[0].get_parent)
-
+        stop = timeit.default_timer()
+        self.logger.debug("Getting parents of line {} took {} ms".format(str(self), (stop-start)*10e3))
         return parents
 
     def re_search_children(self, regex, group=None):

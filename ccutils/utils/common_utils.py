@@ -96,11 +96,12 @@ def convert_interface_name(interface: str, out: str="long"):
     :return: Interface string
     """
     short = [
-        "Eth", "Et", "Se", "Fa", "Gi", "Te", "Twe", "Po", "Tu"
+        "Eth", "Et", "Se", "Fa", "Gi", "Te", "Twe", "Fo", "Hu", "Po", "Tu", "Vl", "Lo", "pw"
     ]
     long = [
         "Ethernet", "Ethernet", "Serial", "FastEthernet", "GigabitEthernet",
-        "TenGigabitEthernet", "TwentyFiveGigE", "Port-channel", "Tunnel"
+        "TenGigabitEthernet", "TwentyFiveGigE", "FortyGigabitEthernet", "HundredGigE", "Port-channel", "Tunnel",
+        "Vlan", "Loopback", "pseudowire"
     ]
     interface_s = split_interface_name(interface)
     if interface_s is None:
