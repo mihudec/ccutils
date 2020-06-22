@@ -32,7 +32,7 @@ class CiscoIosParser(BaseConfigParser):
     _ntp_source_regex = re.compile(pattern="^ntp source (?P<source>{0})".format(_interface_pattern))
 
 
-    _logging_server_base_regex = re.compile(pattern=r"^logging(?: host)? (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
+    _logging_server_base_regex = re.compile(pattern=r"^logging host (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
     _logging_transport_regex = re.compile(pattern=r"transport (?P<protocol>udp|tcp) port (?P<port>\d+)")
 
     def __init__(self, config=None, verbosity=4, **kwargs):

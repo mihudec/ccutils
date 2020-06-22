@@ -201,7 +201,8 @@ class TestServiceInstances(unittest.TestCase):
                     "service_policy": {
                         "input": "SomeInputPolicy",
                         "output": None
-                    }
+                    },
+                    "shutdown": True
                 }
             },
             "GigabitEthernet0/1": {
@@ -209,7 +210,8 @@ class TestServiceInstances(unittest.TestCase):
                     "type": "ethernet",
                     "description": "SI 10 TestDescription",
                     "encapsulation": "untagged",
-                    "bridge_domain": 10
+                    "bridge_domain": 10,
+                    "shutdown": False
                 }
             }
         }

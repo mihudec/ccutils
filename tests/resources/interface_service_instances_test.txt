@@ -4,6 +4,7 @@ interface GigabitEthernet0/0
   encapsulation dot1q 101
   service-policy input SomeInputPolicy
   snmp trap link-status
+  shutdown
  !
 !
 interface GigabitEthernet0/1

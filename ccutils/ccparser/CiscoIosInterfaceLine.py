@@ -64,6 +64,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
     _service_instance_encapsulation_string_regex = re.compile(pattern=r"^  encapsulation (?P<encapsulation>\S+)$", flags=re.MULTILINE)
     _service_instance_bridge_domain_regex = re.compile(pattern=r"^  bridge-domain (?P<number>\d+)$", flags=re.MULTILINE)
     _service_instance_service_policy_regex = re.compile(pattern=r"^  service-policy (?P<direction>input|output) (?P<policy_map>\S+)$", flags=re.MULTILINE)
+    _service_instance_shutdown_regex = re.compile(pattern=r"^  shutdown$", flags=re.MULTILINE)
 
     _ospf_process_regex = re.compile(pattern=r"^ ip ospf (?P<process_id>\d+) area (?P<area>\d+)$", flags=re.MULTILINE)
     _ospf_network_type_regex = re.compile(pattern=r"^ ip ospf network (?P<network_type>\S+)", flags=re.MULTILINE)
@@ -899,6 +900,13 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
                         service_instances[instance_number]["service_policy"]["input"] = candidate["policy_map"]
                     elif candidate["direction"] == "output":
                         service_instances[instance_number]["service_policy"]["output"] = candidate["policy_map"]
+
+            # Service Instance Shutdown
+            shutdown_candidates = service_instance_line.re_search_children(regex=self._service_instance_shutdown_regex)
+            if len(shutdown_candidates) == 1:
+                service_instances[instance_number]["shutdown"] = True
+            elif len(shutdown_candidates) == 0:
+                service_instances[instance_number]["shutdown"] = False
 
 
 
