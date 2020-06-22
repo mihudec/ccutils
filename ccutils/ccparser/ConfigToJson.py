@@ -76,7 +76,7 @@ class ConfigToJson:
 
             # Get Service Instances
             if interface.service_instances or not self.omit_empty:
-                self.datap["interfaces"][interface.name]["service_instances"] = interface.service_instances
+                self.data["interfaces"][interface.name]["service_instances"] = interface.service_instances
 
 
 
@@ -166,6 +166,11 @@ class ConfigToJson:
         self.data["cdp"] = self.config.cdp
         self.data["vlans"] = self.config.vlans
         self.data["vrfs"] = self.config.vrfs
+        try:
+            self.data["ntp"] = self.config.ntp
+            self.data["logging_servers"] = self.config.logging_servers
+        except Exception as e:
+            self.logger.error("Encountered Exception: {}".format(repr(e)))
 
     def get_interface_list(self, flags_filter=None):
         interfaces = []
