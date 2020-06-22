@@ -1,0 +1,25 @@
+ip name-server 10.0.0.1 10.0.0.2
+logging host 10.1.0.10
+logging host 10.1.1.10
+logging host 10.0.0.54
+logging host 10.1.0.37 vrf Mgmt-intf
+logging host 10.0.1.3 transport udp port 1514
+logging host 10.0.1.252
+logging host 10.2.1.14
+logging host 10.2.151.15
+
+ntp authentication-key 27 md5 36A03A8A4C00E81F03D62D8B04BBBF4D 7
+ntp authentication-key 20 md5 36A03A8A4C00E81F03D62D8B04BBBF4D 7
+ntp authentication-key 21 md5 36A03A8A4C00E81F03D62D8B04BBBF4D 7
+ntp authenticate
+ntp trusted-key 27
+ntp trusted-key 20
+ntp trusted-key 21
+ntp source Loopback1000
+ntp access-group peer ACL_NTP-peer
+ntp access-group serve ACL_NTP-serve
+ntp access-group serve-only ACL_NTP-serve-only
+ntp access-group query-only ACL_NTP-query-only
+ntp server 172.20.0.1 key 27 source Loopback0
+ntp server 10.0.0.1
+ntp peer 10.0.1.54 key 20 source Loopback1000

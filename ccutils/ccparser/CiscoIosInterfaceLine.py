@@ -1,15 +1,12 @@
-
-from ccutils.ccparser import BaseConfigLine
-from ccutils.utils import CiscoRange
-from ccutils.utils.common_utils import get_logger, split_interface_name
+from ccutils.ccparser import BaseInterfaceLine
+from ccutils.utils.common_utils import get_logger
 import re
 import functools
 
+class CiscoIosInterfaceLine(BaseInterfaceLine):
 
-class BaseInterfaceLine(BaseConfigLine):
-    """
-    Object for retrieving various config options on the interface level.
-    """
+
+    # Regexes
     _ip_addr_regex = re.compile(pattern=r"^\sip\saddress\s(?P<ip_address>(?:\d{1,3}\.){3}\d{1,3})\s(?P<mask>(?:\d{1,3}\.){3}\d{1,3})(?:\s(?P<secondary>secondary))?", flags=re.MULTILINE)
     _description_regex = re.compile(pattern=r"^\sdescription\s(?P<description>.*)")
     _vrf_regex = re.compile(pattern=r"^(?:\sip)?\svrf\sforwarding\s(?P<vrf>\S+)", flags=re.MULTILINE)
@@ -23,7 +20,7 @@ class BaseInterfaceLine(BaseConfigLine):
     _standby_preempt_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\s(?P<preempt>preempt)", flags=re.MULTILINE)
     _standby_authentication_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\sauthentication\s(?P<authentication_type>md5)\skey-string\s(?P<key_type>0|7)\s(?P<key_string>\S+)", flags=re.MULTILINE)
     _standby_version_regex = re.compile(pattern=r"^\sstandby\sversion\s(?P<version>2)")
-    
+
     _helper_address_regex = re.compile(pattern=r"^\sip\shelper-address\s(?P<helper_address>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
 
 
@@ -73,20 +70,8 @@ class BaseInterfaceLine(BaseConfigLine):
     _ospf_cost_regex = re.compile(pattern=r"^ ip ospf cost (?P<cost>\d+)", flags=re.MULTILINE)
 
 
-
-
-    def __init__(self, number, text, config, verbosity=3, name="BaseInterfaceLine"):
-        """
-        **This class is not meant to be instantiated directly, but only from BaseConfigParser instance.**
-
-        Args:
-            number (int): Index of line in config
-            text (str): Text of the config line
-            config (:obj:`BaseConfigParser`): Reference to the parent BaseConfigParser object
-            verbosity (:obj:`int`, optional): Logging output level, defaults to 3: Warning
-
-        """
-        super(BaseInterfaceLine, self).__init__(number=number, text=text, config=config, verbosity=verbosity, name=name)
+    def __init__(self, number, text, config, verbosity=3):
+        super(CiscoIosInterfaceLine, self).__init__(number=number, text=text, config=config, verbosity=verbosity, name="CiscoIosInterfaceLine")
 
     @functools.lru_cache()
     def get_unprocessed(self, return_type=None):
@@ -981,4 +966,3 @@ class BaseInterfaceLine(BaseConfigLine):
         if len(candidates):
             device_tracking_policy = candidates[0]
         return device_tracking_policy
-

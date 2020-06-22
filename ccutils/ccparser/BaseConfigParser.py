@@ -11,12 +11,14 @@ import functools
 
 re._MAXCACHE = 1024
 
+
 class BaseConfigParser(object):
     """
     Base Configuration Parser object used for loading configuration files.
     """
 
     PATTERN_TYPE = type(re.compile(pattern=""))
+    INTERFACE_LINE_CLASS = BaseInterfaceLine
 
     # Patterns
     _vlan_configuration_regex = re.compile(pattern=r"^vlan configuration (?P<vlan_range>[\d\-,]+)", flags=re.MULTILINE)
@@ -72,6 +74,8 @@ class BaseConfigParser(object):
         self.logger = get_logger(name="ConfigParser", verbosity=verbosity)
         self.config = config
         self.path = self._check_path(kwargs.get("filepath", None)) if kwargs.get("filepath", None) else None
+
+        self.minimal_results = True
         #: This is a URI.
         self.lines = []
         self.config_lines_str = []
@@ -209,7 +213,7 @@ class BaseConfigParser(object):
         start = timeit.default_timer()
         for number, text in enumerate(self.config_lines_str):
             if re.match(pattern=r"^interface\s\S+", string=text, flags=re.MULTILINE):
-                self.lines.append(BaseInterfaceLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
+                self.lines.append(self.INTERFACE_LINE_CLASS(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
             else:
                 self.lines.append(BaseConfigLine(number=number, text=text, config=self, verbosity=self.verbosity).return_obj())
         for line in self.lines:
@@ -283,10 +287,44 @@ class BaseConfigParser(object):
                 return []
         return section
 
+    def match_to_dict(self, line, patterns):
+        """
 
+        Args:
+            line: Instance of `BaseConfigLine` object
+            patterns: List of compiled `re` patterns
+            minimal_result: Bool, if True, omits keys with value `None`
 
+        Returns:
+            dict: Dictionary containing named groups across all provided patterns
+
+        """
+        entry = {}
+
+        for pattern in patterns:
+            match_result = line.re_search(regex=pattern, group="ALL")
+            if match_result is not None:
+                entry.update(match_result)
+            else:
+                if self.minimal_results:
+                    continue
+                else:
+                    entry.update({k:None for k in pattern.groupindex.keys()})
+        return entry
+
+    def property_autoparse(self, candidate_pattern, patterns):
+        properties = None
+        candidates = self.find_objects(regex=candidate_pattern)
+        if len(candidates):
+            properties = []
+        else:
+            return properties
+        for candidate in candidates:
+            properties.append(self.match_to_dict(line=candidate, patterns=patterns))
+        return properties
 
     @property
+    @functools.lru_cache()
     def hostname(self):
         hostname = None
         regex = r"^hostname\s(\S+)"
@@ -313,12 +351,13 @@ class BaseConfigParser(object):
         return domain_name
 
     @property
+    @functools.lru_cache()
     def name_servers(self):
         name_servers = []
-        name_servers_regex = re.compile(pattern=r"^ip name.server (?P<name_server>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
+        name_servers_regex = re.compile(pattern=r"^ip name.server (?P<name_servers>(?:\d{1,3}\.){3}\d{1,3}(?: (?:\d{1,3}\.){3}\d{1,3})*)", flags=re.MULTILINE)
         candidates = self.find_objects(regex=name_servers_regex)
         for candidate in candidates:
-            name_servers.append(candidate.re_search(regex=name_servers_regex, group="name_server"))
+            name_servers.extend(re.findall(pattern=r"(?:\d{1,3}\.){3}\d{1,3}", string=candidate.text))
         return name_servers
 
     @property

@@ -15,7 +15,7 @@ class BaseConfigLine(object):
     comment_regex = re.compile(pattern=r"^(\s+)?!.*", flags=re.MULTILINE)
     _interface_regex = re.compile(pattern=r"^interface\s(\S+)", flags=re.MULTILINE)
 
-    def __init__(self, number, text, config, verbosity=3):
+    def __init__(self, number, text, config, verbosity=3, name="BaseConfigLine"):
         """
         **This class is not meant to be instantiated directly, but only from BaseConfigParser instance.**
 
@@ -26,7 +26,8 @@ class BaseConfigLine(object):
             verbosity (:obj:`int`, optional): Logging output level, defaults to 3: Warning
 
         """
-        self.logger = get_logger(name="BaseConfigLine", verbosity=verbosity)
+        self._name = name
+        self.logger = get_logger(name=name, verbosity=verbosity)
         #print(self.logger.handlers)
         self.config = config
         self.config_lines_obj = self.config.lines
@@ -34,6 +35,8 @@ class BaseConfigLine(object):
         self.text = text
         self.indent = len(self.text) - len(self.text.lstrip(" "))
         self.type = None
+        self.logger.debug("Parsing line: #{}: '{}'".format(self.number, self.text))
+
 
     def return_obj(self):
         return self
@@ -230,7 +233,7 @@ class BaseConfigLine(object):
                     self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
                     return None
         else:
-            self.logger.info(msg="Given regex '{}' did not match.".format(regex))
+            self.logger.debug(msg="Given regex '{}' did not match.".format(regex))
             return None
 
     def re_match(self, regex, group=None):
@@ -259,7 +262,7 @@ class BaseConfigLine(object):
                     self.logger.error(msg="Given regex '{}' does not contain required group '{}'".format(regex, group))
                     return None
         else:
-            self.logger.info(msg="Given regex '{}' did not match.".format(regex))
+            self.logger.debug(msg="Given regex '{}' did not match.".format(regex))
             return None
 
     @property
@@ -329,7 +332,7 @@ class BaseConfigLine(object):
         return bool(re.match(self._interface_regex, self.text))
 
     def __str__(self):
-        return "[BaseConfigLine #{} ({}): '{}']".format(self.number, self.type, self.text)
+        return "[{} #{} ({}): '{}']".format(self._name, self.number, self.type, self.text)
 
     def __repr__(self):
         return self.__str__()

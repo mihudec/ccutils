@@ -1,7 +1,7 @@
 import unittest
 import pathlib
 import json
-from ccutils.ccparser import BaseConfigParser
+from ccutils.ccparser import ConfigParser
 
 DEBUG = False
 VERBOSITY = 5 if DEBUG else 3
@@ -9,7 +9,7 @@ VERBOSITY = 5 if DEBUG else 3
 
 class TestBaseConfigParser(unittest.TestCase):
     test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_service_instances_test.txt")
-    config = BaseConfigParser(config=test_file_path, verbosity=VERBOSITY)
+    config = ConfigParser(config=test_file_path, verbosity=VERBOSITY, device_type="ios")
 
     def test_interface_parent(self):
         wanted_results = {

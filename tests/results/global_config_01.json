@@ -1,0 +1,50 @@
+{
+  "name_servers": [
+    "10.0.0.1",
+    "10.0.0.2"
+  ],
+  "ntp_global": {
+    "source": "Loopback1000",
+    "authenticate": true
+  },
+  "ntp_authentication_keys": [
+    {
+      "key": "27",
+      "hash_algorithm": "md5",
+      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+      "number": "7"
+    },
+    {
+      "key": "20",
+      "hash_algorithm": "md5",
+      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+      "number": "7"
+    },
+    {
+      "key": "21",
+      "hash_algorithm": "md5",
+      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+      "number": "7"
+    }
+  ],
+  "ntp_trusted_keys": [
+    {
+      "key": "27"
+    },
+    {
+      "key": "20"
+    },
+    {
+      "key": "21"
+    }
+  ],
+  "ntp_access_groups": {
+    "peer": "ACL_NTP-peer",
+    "serve": "ACL_NTP-serve",
+    "serve-only": "ACL_NTP-serve-only",
+    "query-only": "ACL_NTP-query-only"
+  },
+  "ntp_peers": [{"server": "10.0.1.54", "source_interface": "Loopback1000", "key": "20"}],
+  "ntp_servers": [{"server": "172.20.0.1", "source_interface": "Loopback0", "key": "27"}, {"server": "10.0.0.1"}]
+
+}

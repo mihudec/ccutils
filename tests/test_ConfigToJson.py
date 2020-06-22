@@ -1,7 +1,7 @@
 import unittest
 import pathlib
 import json
-from ccutils.ccparser import BaseConfigParser, ConfigToJson
+from ccutils.ccparser import ConfigParser, ConfigToJson
 
 
 class TestConfigToJson(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestConfigToJson(unittest.TestCase):
         }
         for hostname in wanted_results.keys():
             with self.subTest(msg=hostname):
-                config = BaseConfigParser(config=pathlib.Path(__file__).parent.joinpath("resources/{}.txt".format(hostname)))
+                config = ConfigParser(config=pathlib.Path(__file__).parent.joinpath("resources/{}.txt".format(hostname)), device_type="ios")
                 ctj = ConfigToJson(config=config, omit_empty=wanted_results[hostname]["omit_empty"], verbosity=5)
                 # print(ctj.to_json())
                 # print(ctj.to_yaml())

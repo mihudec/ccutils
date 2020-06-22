@@ -66,10 +66,17 @@ class ConfigToJson:
             if interface.mtu or not self.omit_empty:
                 self.data["interfaces"][interface.name]["mtu"] = interface.mtu
 
+            # Get Interface Load-Interval
+            if interface.load_interval or not self.omit_empty:
+                self.data["interfaces"][interface.name]["load_interval"] = interface.load_interval
+
             # Get Service Policies
             if interface.service_policy != {"input": None, "output": None} or not self.omit_empty:
                 self.data["interfaces"][interface.name]["service_policy"] = interface.service_policy
 
+            # Get Service Instances
+            if interface.service_instances or not self.omit_empty:
+                self.datap["interfaces"][interface.name]["service_instances"] = interface.service_instances
 
 
 

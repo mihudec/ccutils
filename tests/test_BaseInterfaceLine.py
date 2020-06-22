@@ -1,12 +1,12 @@
 import unittest
 import pathlib
 import json
-from ccutils.ccparser import BaseConfigParser
+from ccutils.ccparser import ConfigParser
 
 
 class TestL2Interface(unittest.TestCase):
     test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_l2_test.txt")
-    config = BaseConfigParser(config=test_file_path)
+    config = ConfigParser(config=test_file_path, device_type="ios")
 
     def test_switchport_mode(self):
         wanted_results = {
@@ -70,7 +70,7 @@ class TestL2Interface(unittest.TestCase):
 
 class TestL3Interface(unittest.TestCase):
     test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_l3_test.txt")
-    config = BaseConfigParser(config=test_file_path)
+    config = ConfigParser(config=test_file_path, device_type="ios")
 
     def test_encapsulation(self):
         wanted_results = {
@@ -118,7 +118,7 @@ class TestL3Interface(unittest.TestCase):
 
 class TestTunnelInterface(unittest.TestCase):
     test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_tunnel_test.txt")
-    config = BaseConfigParser(config=test_file_path)
+    config = ConfigParser(config=test_file_path, device_type="ios")
 
     def test_interface_tunnel_properties_1(self):
         wanted_results = {
@@ -186,7 +186,7 @@ class TestTunnelInterface(unittest.TestCase):
 
 class TestServiceInstances(unittest.TestCase):
     test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_service_instances_test.txt")
-    config = BaseConfigParser(config=test_file_path)
+    config = ConfigParser(config=test_file_path, device_type="ios")
 
     def test_interface_service_instances_1(self):
         wanted_results = {
@@ -219,6 +219,7 @@ class TestServiceInstances(unittest.TestCase):
                 interface_line = [x for x in self.config.interface_lines if x.name == interface][0]
                 result = interface_line.service_instances
                 self.assertEqual(wanted_results[interface], result)
+
 
 if __name__ == '__main__':
     unittest.main()
