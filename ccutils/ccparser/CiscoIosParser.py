@@ -162,7 +162,7 @@ class CiscoIosParser(BaseConfigParser):
     def ntp_global_params(self):
         ntp_global_params = {
             "source": None,
-            "authenticate": False
+            "authenticate": None
         }
         source_candidates = self.find_objects(regex=self._ntp_source_regex)
         if len(source_candidates) == 1:
@@ -183,6 +183,9 @@ class CiscoIosParser(BaseConfigParser):
         ntp["access_groups"] = self.ntp_access_groups
         ntp["authentication_keys"] = self.ntp_authentication_keys
         ntp["trusted_keys"] = self.ntp_trusted_keys
+        empty_check = set(ntp.values())
+        if len(empty_check) == 1 and empty_check[0] is None:
+            ntp = None
         return ntp
 
     @property
