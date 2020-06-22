@@ -53,8 +53,6 @@
   "hostname": null,
   "domain_name": null,
   "name_servers": null,
-  "ntp": null,
-  "logging_servers": null,
   "cdp": true,
   "vlans": {},
   "vrfs": null

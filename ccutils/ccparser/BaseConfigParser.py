@@ -323,6 +323,31 @@ class BaseConfigParser(object):
             properties.append(self.match_to_dict(line=candidate, patterns=patterns))
         return properties
 
+    def section_property_autoparse(self, candidate_pattern, patterns):
+        entries = None
+        candidates = self.find_objects(regex=candidate_pattern)
+        if len(candidates):
+            entries = []
+        else:
+            return entries
+        for candidate in candidates:
+            entry = {}
+            entry.update(self.match_to_dict(line=candidate, patterns=[candidate_pattern]))
+            for pattern in patterns:
+                updates = candidate.re_search_children(regex=pattern, group="ALL")
+                if len(updates) == 1:
+                    entry.update(updates[0])
+                elif len(updates) == 0:
+                    if self.minimal_results:
+                        continue
+                    else:
+                        entry.update({k: None for k in pattern.groupindex.keys()})
+                else:
+                    self.logger.warning("Multiple possible updates found for Pattern: '{}' on Candidate: '{}'".format(pattern, candidate))
+
+            entries.append(entry)
+        return entries
+
     @property
     @functools.lru_cache()
     def hostname(self):

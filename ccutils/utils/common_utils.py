@@ -161,6 +161,24 @@ def match_to_json(match, groups):
     return result
 
 
+def remove_empty_values(entry: dict) -> dict:
+    return {k: v for k, v in entry.items() if v is not None}
+
+
+def value_to_bool(entry: dict, keys: list, keep_none=False) -> dict:
+    for key in keys:
+        if key not in entry.keys():
+            continue
+        if entry[key] is not None:
+            entry[key] = True
+        else:
+            if keep_none:
+                continue
+            else:
+                entry[key] = False
+        return entry
+
+
 def check_path(path, create=False):
     """
 

@@ -12,19 +12,19 @@
       "key": "27",
       "hash_algorithm": "md5",
       "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
-      "number": "7"
+      "encryption_type": "7"
     },
     {
       "key": "20",
       "hash_algorithm": "md5",
       "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
-      "number": "7"
+      "encryption_type": "7"
     },
     {
       "key": "21",
       "hash_algorithm": "md5",
       "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
-      "number": "7"
+      "encryption_type": "7"
     }
   ],
   "ntp_trusted_keys": [
@@ -44,7 +44,100 @@
     "serve-only": "ACL_NTP-serve-only",
     "query-only": "ACL_NTP-query-only"
   },
-  "ntp_peers": [{"server": "10.0.1.54", "source_interface": "Loopback1000", "key": "20"}],
-  "ntp_servers": [{"server": "172.20.0.1", "source_interface": "Loopback0", "key": "27"}, {"server": "10.0.0.1"}]
-
+  "ntp_peers": [
+    {
+      "server": "10.0.1.54",
+      "source_interface": "Loopback1000",
+      "key": "20"
+    },
+    {
+      "server": "192.168.1.2",
+      "source_interface": "Vlan1",
+      "vrf": "Test"
+    }
+  ],
+  "ntp_servers": [
+    {
+      "server": "172.20.0.1",
+      "source_interface": "Loopback0",
+      "key": "27"
+    },
+    {
+      "server": "10.0.0.1"
+    },
+    {
+      "server": "192.168.1.1",
+      "source_interface": "Vlan1",
+      "vrf": "Test"
+    }
+  ],
+  "tacacs_servers": [
+    {
+      "name": "ISE-1",
+      "address_version": "ipv4",
+      "server": "10.0.0.1",
+      "encryption_type": "7",
+      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+      "timeout": "10",
+      "single_connection": true
+    },
+    {
+      "name": "ISE-2",
+      "address_version": "ipv4",
+      "server": "10.0.1.1",
+      "encryption_type": "7",
+      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+      "timeout": "10",
+      "single_connection": true
+    }
+  ],
+  "radius_servers": [
+    {
+      "name": "RADIUS-Primary",
+      "address_version": "ipv4",
+      "server": "10.0.0.1",
+      "encryption_type": null,
+      "hash": "Test123",
+      "timeout": "2",
+      "retransmit": "1",
+      "auth_port": "1812",
+      "acct_port": "1813"
+    },
+    {
+      "name": "RADIUS-Secondary",
+      "address_version": "ipv4",
+      "server": "10.0.1.1",
+      "encryption_type": null,
+      "hash": "Test123",
+      "timeout": "2",
+      "retransmit": "1",
+      "auth_port": "1812",
+      "acct_port": "1813"
+    }
+  ],
+  "radius_groups": [
+    {
+      "name": "RADIUS-GROUP",
+      "source_interface": "Vlan100",
+      "servers": [
+        {
+          "name": "RADIUS-Primary"
+        }
+      ]
+    }
+  ],
+  "tacacs_groups": [
+    {
+      "name": "ISE-TACACS",
+      "source_interface": "Loopback0",
+      "servers": [
+        {
+          "name": "ISE-1"
+        },
+        {
+          "name": "ISE-2"
+        }
+      ]
+    }
+  ]
 }

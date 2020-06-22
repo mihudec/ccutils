@@ -89,5 +89,37 @@ class TestConfigParser01(unittest.TestCase):
         parser.minimal_results = True
         print(parser.logging_servers)
 
+    def test_tacacs_servers(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        want = self.results["tacacs_servers"]
+        have = parser.tacacs_servers
+        jprint(have)
+        self.assertEqual(want, have)
+
+    def test_radius_servers(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        want = self.results["radius_servers"]
+        have = parser.radius_servers
+        jprint(have)
+        self.assertEqual(want, have)
+
+    def test_tacacs_groups(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        want = self.results["tacacs_groups"]
+        have = parser.tacacs_groups
+        jprint(have)
+        self.assertEqual(want, have)
+
+    def test_radius_groups(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        want = self.results["radius_groups"]
+        have = parser.radius_groups
+        jprint(have)
+        self.assertEqual(want, have)
+
 if __name__ == '__main__':
     unittest.main()

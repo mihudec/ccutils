@@ -1,3 +1,52 @@
+aaa new-model
+!
+!
+aaa group server tacacs+ ISE-TACACS
+ server name ISE-1
+ server name ISE-2
+ ip tacacs source-interface Loopback0
+!
+aaa authentication login default group ISE-TACACS local
+aaa authentication login CONSOLE local
+aaa authorization config-commands
+aaa authorization exec default group ISE-TACACS if-authenticated
+aaa authorization commands 1 default group ISE-TACACS local
+aaa authorization commands 1 CONSOLE none
+aaa authorization commands 15 default group ISE-TACACS local
+aaa authorization commands 15 CONSOLE none
+aaa accounting exec default start-stop group ISE-TACACS
+aaa accounting commands 0 default start-stop group ISE-TACACS
+aaa accounting commands 15 default start-stop group ISE-TACACS
+aaa accounting connection default start-stop group ISE-TACACS
+aaa accounting system default start-stop group ISE-TACACS
+
+tacacs server ISE-1
+ address ipv4 10.0.0.1
+ key 7 36A03A8A4C00E81F03D62D8B04BBBF4D
+ timeout 10
+ single-connection
+tacacs server ISE-2
+ address ipv4 10.0.1.1
+ key 7 36A03A8A4C00E81F03D62D8B04BBBF4D
+ timeout 10
+ single-connection
+
+aaa group server radius RADIUS-GROUP
+ server name RADIUS-Primary
+ ip radius source-interface Vlan100
+radius server RADIUS-Primary
+ address ipv4 10.0.0.1 auth-port 1812 acct-port 1813
+ timeout 2
+ retransmit 1
+ key Test123
+radius server RADIUS-Secondary
+ address ipv4 10.0.1.1 auth-port 1812 acct-port 1813
+ timeout 2
+ retransmit 1
+ key Test123
+
+
+
 ip name-server 10.0.0.1 10.0.0.2
 logging host 10.1.0.10
 logging host 10.1.1.10
@@ -22,4 +71,6 @@ ntp access-group serve-only ACL_NTP-serve-only
 ntp access-group query-only ACL_NTP-query-only
 ntp server 172.20.0.1 key 27 source Loopback0
 ntp server 10.0.0.1
+ntp server vrf Test 192.168.1.1 source Vlan1
 ntp peer 10.0.1.54 key 20 source Loopback1000
+ntp peer vrf Test 192.168.1.2 source Vlan1

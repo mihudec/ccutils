@@ -18,6 +18,7 @@ class TestConfigToJson(unittest.TestCase):
                 # print(ctj.to_json())
                 # print(ctj.to_yaml())
                 result = json.loads(pathlib.Path(__file__).parent.joinpath("results/{}.json".format(hostname)).read_text())
+                print(json.dumps(ctj.data, indent=2))
                 self.assertDictEqual(ctj.data, result)
 
 if __name__ == '__main__':

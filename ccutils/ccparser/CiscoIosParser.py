@@ -1,6 +1,7 @@
 from ccutils.ccparser import BaseConfigParser
 from ccutils.ccparser import CiscoIosInterfaceLine
 from ccutils.utils import CiscoRange
+from ccutils.utils.common_utils import remove_empty_values, value_to_bool
 import functools
 import re
 
@@ -24,16 +25,38 @@ class CiscoIosParser(BaseConfigParser):
 
     _name_server_base_regex = re.compile(pattern=r"^ip name.server (?P<name_servers>(?:\d{1,3}\.){3}\d{1,3}(?: (?:\d{1,3}\.){3}\d{1,3})*)", flags=re.MULTILINE)
 
-    _ntp_server_base_regex = re.compile(pattern=r"^ntp server (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
-    _ntp_peer_base_regex = re.compile(pattern=r"^ntp peer (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
+    _ntp_server_base_regex = re.compile(pattern=r"^ntp server(?: vrf \S+)? (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
+    _ntp_peer_base_regex = re.compile(pattern=r"^ntp peer(?: vrf \S+)? (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
     _ntp_access_group_regex = re.compile(pattern=r"^ntp access-group (?P<access_type>peer|serve|serve-only|query-only) (?P<acl>{0})".format(_acl_name))
-    _ntp_authentication_keys_regex = re.compile(pattern=r"^ntp authentication-key (?P<key>\d+) (?P<hash_algorithm>\S+) (?P<hash>\S+) (?P<number>\d+)".format(_acl_name))
+    _ntp_authentication_keys_regex = re.compile(pattern=r"^ntp authentication-key (?P<key>\d+) (?P<hash_algorithm>\S+) (?P<hash>\S+)(?: (?P<encryption_type>\d+))?".format(_acl_name))
     _ntp_trusted_key_regex = re.compile(pattern=r"ntp trusted-key (?P<key>\d+)")
     _ntp_source_regex = re.compile(pattern="^ntp source (?P<source>{0})".format(_interface_pattern))
 
 
     _logging_server_base_regex = re.compile(pattern=r"^logging host (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
     _logging_transport_regex = re.compile(pattern=r"transport (?P<protocol>udp|tcp) port (?P<port>\d+)")
+
+    _tacacs_server_regex = re.compile(pattern=r"^tacacs server (?P<name>\S+)")
+    _radius_server_regex = re.compile(pattern=r"^radius server (?P<name>\S+)")
+
+    _radius_auth_port_regex = re.compile(pattern=r"auth-port (?P<auth_port>\d+)")
+    _radius_acct_port_regex = re.compile(pattern=r"acct-port (?P<acct_port>\d+)")
+
+    _aaa_radius_group_regex = re.compile(pattern=r"^aaa group server radius (?P<name>\S+)")
+    _aaa_tacacs_group_regex = re.compile(pattern=r"^aaa group server tacacs\+ (?P<name>\S+)")
+
+    _aaa_group_server_name_regex = re.compile(pattern=r"^ server name (?P<name>\S+)")
+    _aaa_group_vrf_regex = re.compile(pattern=r"^ ip vrf forwarding (?P<vrf>\S+)")
+    _aaa_group_source_interface_regex = re.compile(pattern=r"^ ip (?:tacacs|radius) source-interface (?P<source_interface>{0})".format(_interface_pattern))
+
+    _aaa_server_address_regex = re.compile(pattern=r"^ address (?P<address_version>ipv4|ipv6) (?P<server>\S+)")
+    _aaa_server_key_regex = re.compile(pattern=r"^ key(?: (?P<encryption_type>\d+))? (?P<hash>\S+)")
+    _aaa_server_timeout_regex = re.compile(pattern=r"^ timeout (?P<timeout>\d+)")
+    _aaa_server_retransmit_regex = re.compile(pattern=r"^ retransmit (?P<retransmit>\d+)")
+    _aaa_server_single_connection = re.compile(pattern=r"^ (?P<single_connection>single-connection)")
+
+    _aaa_method_group_regex = re.compile(pattern=r"(?:group \S+)|local|radius|tacacs\+")
+    _aaa_authentication_base_regex = re.compile(pattern=r"^aaa authentication login (?P<name>)")
 
     def __init__(self, config=None, verbosity=4, **kwargs):
         super(CiscoIosParser, self).__init__(config=config, verbosity=verbosity, **kwargs)
@@ -103,9 +126,13 @@ class CiscoIosParser(BaseConfigParser):
             self._ntp_server_base_regex,
             self._source_interface_regex,
             self._source_vrf_regex,
-            re.compile("key (?P<key>\d+)")
+            re.compile("key (?P<key>\d+)"),
+            re.compile("(?P<prefer>prefer)")
         ]
         ntp_servers = self.property_autoparse(candidate_pattern=candidate_pattern, patterns=patterns)
+        if ntp_servers is not None:
+            for server in ntp_servers:
+                server = value_to_bool(entry=server, keys=["prefer"])
         return ntp_servers
 
     @property
@@ -203,6 +230,190 @@ class CiscoIosParser(BaseConfigParser):
         ]
         logging_servers = self.property_autoparse(candidate_pattern=candidate_pattern, patterns=patterns)
         return logging_servers
+
+    @property
+    @functools.lru_cache()
+    def tacacs_servers(self):
+        """
+
+        Returns:
+            list: List of TACACS Servers
+
+            Example::
+
+                [
+                    {
+                      "name": "ISE-1",
+                      "address_version": "ipv4",
+                      "server": "10.0.0.1",
+                      "encryption_type": "7",
+                      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+                      "timeout": "10",
+                      "single_connection": true
+                    },
+                    {
+                      "name": "ISE-2",
+                      "address_version": "ipv4",
+                      "server": "10.0.1.1",
+                      "encryption_type": "7",
+                      "hash": "36A03A8A4C00E81F03D62D8B04BBBF4D",
+                      "timeout": "10",
+                      "single_connection": true
+                    }
+                ]
+
+            Returns ``None`` if absent
+
+
+        """
+        patterns = [
+            self._aaa_server_address_regex,
+            self._aaa_server_key_regex,
+            self._aaa_server_timeout_regex,
+            self._aaa_server_retransmit_regex,
+            self._aaa_server_single_connection
+        ]
+        tacacs_servers = self.section_property_autoparse(candidate_pattern=self._tacacs_server_regex, patterns=patterns)
+        if tacacs_servers is not None:
+            for entry in tacacs_servers:
+                entry = value_to_bool(entry=entry, keys=["single_connection"])
+        return tacacs_servers
+
+    @property
+    @functools.lru_cache()
+    def radius_servers(self):
+        """
+
+        Returns:
+            list: List of RADIUS Servers
+
+            Example::
+
+                [
+                    {
+                      "name": "RADIUS-Primary",
+                      "address_version": "ipv4",
+                      "server": "10.0.0.1",
+                      "encryption_type": null,
+                      "hash": "Test123",
+                      "timeout": "2",
+                      "retransmit": "1",
+                      "auth_port": "1812",
+                      "acct_port": "1813"
+                    },
+                    {
+                      "name": "RADIUS-Secondary",
+                      "address_version": "ipv4",
+                      "server": "10.0.1.1",
+                      "encryption_type": null,
+                      "hash": "Test123",
+                      "timeout": "2",
+                      "retransmit": "1",
+                      "auth_port": "1812",
+                      "acct_port": "1813"
+                    }
+                ]
+
+            Returns ``None`` if absent
+
+        """
+        patterns = [
+            self._aaa_server_address_regex,
+            self._aaa_server_key_regex,
+            self._aaa_server_timeout_regex,
+            self._aaa_server_retransmit_regex,
+            self._aaa_server_single_connection,
+            self._radius_auth_port_regex,
+            self._radius_acct_port_regex
+        ]
+        radius_servers = self.section_property_autoparse(candidate_pattern=self._radius_server_regex, patterns=patterns)
+        if radius_servers is not None:
+            for entry in radius_servers:
+                entry = value_to_bool(entry=entry, keys=["single_connection"])
+        return radius_servers
+
+    @property
+    @functools.lru_cache()
+    def tacacs_groups(self):
+        """
+
+        Returns:
+            list: List of TACACS Server entries
+
+            Example::
+
+                [
+                    {
+                        "name": "ISE-TACACS",
+                        "source_interface": "Loopback0",
+                        "servers": [
+                            {
+                                "name": "ISE-1"
+                            },
+                            {
+                                "name": "ISE-2"
+                            }
+                        ]
+                    }
+                ]
+
+            Returns ``None`` if absent
+
+        """
+        patterns = [
+            self._aaa_group_vrf_regex,
+            self._aaa_group_source_interface_regex,
+        ]
+        tacacs_groups = self.section_property_autoparse(candidate_pattern=self._aaa_tacacs_group_regex, patterns=patterns)
+        if tacacs_groups is not None:
+            candidates = self.find_objects(regex=self._aaa_tacacs_group_regex)
+            for candidate in candidates:
+                name = candidate.re_search(regex=self._aaa_tacacs_group_regex, group="name")
+                servers = candidate.re_search_children(regex=self._aaa_group_server_name_regex, group="ALL")
+                for tacacs_group in tacacs_groups:
+                    if tacacs_group["name"] == name:
+                        tacacs_group["servers"] = servers
+        return tacacs_groups
+
+    @property
+    @functools.lru_cache()
+    def radius_groups(self):
+        """
+
+        Returns:
+            list: List of RADIUS Server Groups Entries
+
+            Example::
+
+                [
+                    {
+                        "name": "RADIUS-GROUP",
+                        "source_interface": "Vlan100",
+                        "servers": [
+                            {
+                                "name": "RADIUS-Primary"
+                            }
+                        ]
+                    }
+                ]
+
+            Returns ``None`` if absent
+
+        """
+        patterns = [
+            self._aaa_group_vrf_regex,
+            self._aaa_group_source_interface_regex
+        ]
+        radius_groups = self.section_property_autoparse(candidate_pattern=self._aaa_radius_group_regex, patterns=patterns)
+        if radius_groups is not None:
+            candidates = self.find_objects(regex=self._aaa_radius_group_regex)
+            for candidate in candidates:
+                name = candidate.re_search(regex=self._aaa_radius_group_regex, group="name")
+                servers = candidate.re_search_children(regex=self._aaa_group_server_name_regex, group="ALL")
+                for radius_group in radius_groups:
+                    if radius_group["name"] == name:
+                        radius_group["servers"] = servers
+        return radius_groups
 
     @property
     def vlans(self):
