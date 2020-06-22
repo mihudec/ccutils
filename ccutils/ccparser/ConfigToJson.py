@@ -172,7 +172,7 @@ class ConfigToJson:
             if self.config.logging_servers or not self.omit_empty:
                 self.data["logging_servers"] = self.config.logging_servers
             if self.config.tacacs_servers or not self.omit_empty:
-                self.data["tacacs_servers"] = self.config.radius_servers
+                self.data["tacacs_servers"] = self.config.tacacs_servers
             if self.config.radius_servers or not self.omit_empty:
                 self.data["radius_servers"] = self.config.radius_servers
             if self.config.tacacs_groups or not self.omit_empty:
