@@ -1,5 +1,6 @@
 from ccutils.ccparser import BaseInterfaceLine
-from ccutils.utils.common_utils import get_logger
+from ccutils.utils.common_utils import get_logger, split_interface_name
+from ccutils.utils import CiscoRange
 import re
 import functools
 

@@ -52,7 +52,7 @@
   },
   "hostname": null,
   "domain_name": null,
-  "name_servers": [],
+  "name_servers": null,
   "cdp": true,
   "vlans": {},
   "vrfs": null

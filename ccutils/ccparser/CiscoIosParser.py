@@ -1,5 +1,6 @@
 from ccutils.ccparser import BaseConfigParser
 from ccutils.ccparser import CiscoIosInterfaceLine
+from ccutils.utils import CiscoRange
 import functools
 import re
 
