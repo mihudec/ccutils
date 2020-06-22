@@ -183,8 +183,11 @@ class CiscoIosParser(BaseConfigParser):
         ntp["access_groups"] = self.ntp_access_groups
         ntp["authentication_keys"] = self.ntp_authentication_keys
         ntp["trusted_keys"] = self.ntp_trusted_keys
-        empty_check = set(ntp.values())
-        if len(empty_check) == 1 and empty_check[0] is None:
+        is_empty = True
+        for value in ntp.values():
+            if value is not None:
+                is_empty = False
+        if is_empty:
             ntp = None
         return ntp
 
