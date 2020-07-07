@@ -982,3 +982,7 @@ class BaseInterfaceLine(BaseConfigLine):
             device_tracking_policy = candidates[0]
         return device_tracking_policy
 
+    @property
+    def ip_unnumbered_interface(self):
+        self.logger.warning("This object does not support this property.")
+        return None

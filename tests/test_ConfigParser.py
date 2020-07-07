@@ -87,7 +87,27 @@ class TestConfigParser01(unittest.TestCase):
     def test_logging_servers(self):
         parser = ConfigParser(config=self.config_path, device_type="ios")
         parser.minimal_results = True
-        print(parser.logging_servers)
+        want = self.results["logging_servers"]
+        have = parser.logging_servers
+        self.assertEqual(want, have)
+
+
+    def test_logging_global_params(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        want = self.results["logging_global"]
+        have = parser.logging_global_params
+        self.assertEqual(want, have)
+
+    def test_logging(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        want = {
+            "source": "Loopback0",
+            "servers": self.results["logging_servers"],
+        }
+        have = parser.logging
+        self.assertEqual(want, have)
 
     def test_tacacs_servers(self):
         parser = ConfigParser(config=self.config_path, device_type="ios")

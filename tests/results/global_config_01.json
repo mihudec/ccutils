@@ -71,6 +71,38 @@
       "vrf": "Test"
     }
   ],
+  "logging_global": {
+    "source": "Loopback0"
+  },
+  "logging_servers": [
+    {
+      "server": "10.1.0.10"
+    },
+    {
+      "server": "10.1.1.10"
+    },
+    {
+      "server": "10.0.0.54"
+    },
+    {
+      "server": "10.1.0.37",
+      "vrf": "Mgmt-intf"
+    },
+    {
+      "server": "10.0.1.3",
+      "protocol": "udp",
+      "port": "1514"
+    },
+    {
+      "server": "10.0.1.252"
+    },
+    {
+      "server": "10.2.1.14"
+    },
+    {
+      "server": "10.2.151.15"
+    }
+  ],
   "tacacs_servers": [
     {
       "name": "ISE-1",

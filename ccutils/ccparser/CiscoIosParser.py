@@ -32,7 +32,7 @@ class CiscoIosParser(BaseConfigParser):
     _ntp_trusted_key_regex = re.compile(pattern=r"ntp trusted-key (?P<key>\d+)")
     _ntp_source_regex = re.compile(pattern="^ntp source (?P<source>{0})".format(_interface_pattern))
 
-
+    _logging_source_interface_regex = re.compile(pattern=r"^logging source-interface (?P<source>{0})".format(_interface_pattern))
     _logging_server_base_regex = re.compile(pattern=r"^logging host (?P<server>{0}|{1})".format(_ip_address_pattern, _host_pattern))
     _logging_transport_regex = re.compile(pattern=r"transport (?P<protocol>udp|tcp) port (?P<port>\d+)")
 
@@ -230,6 +230,34 @@ class CiscoIosParser(BaseConfigParser):
         ]
         logging_servers = self.property_autoparse(candidate_pattern=candidate_pattern, patterns=patterns)
         return logging_servers
+
+    @property
+    @functools.lru_cache()
+    def logging_global_params(self):
+        logging_global_params = {
+            "source": None
+        }
+        source_interface_candidates = self.find_objects(regex=self._logging_source_interface_regex)
+        if len(source_interface_candidates) == 1:
+            logging_global_params["source"] = source_interface_candidates[0].re_search(regex=self._logging_source_interface_regex, group="source")
+        return logging_global_params
+
+    @property
+    @functools.lru_cache()
+    def logging(self):
+        logging = {}
+        logging.update(self.logging_global_params)
+        logging["servers"] = self.logging_servers
+
+        # Check for emptyness
+        is_empty = True
+        for value in logging.values():
+            if value is not None:
+                is_empty = False
+                break
+        if is_empty:
+            logging = None
+        return logging
 
     @property
     @functools.lru_cache()

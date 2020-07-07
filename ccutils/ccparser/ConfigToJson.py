@@ -113,6 +113,10 @@ class ConfigToJson:
                 if interface.ospf or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["ospf"] = interface.ospf
 
+                # IP Unnumbered
+                if interface.ip_unnumbered_interface or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["unnumbered"] = interface.ip_unnumbered_interface
+
             elif port_mode == "l2":
 
                 self.data["interfaces"][interface.name]["l2"] = {}
@@ -170,7 +174,7 @@ class ConfigToJson:
             if self.config.ntp or not self.omit_empty:
                 self.data["ntp"] = self.config.ntp
             if self.config.logging_servers or not self.omit_empty:
-                self.data["logging_servers"] = self.config.logging_servers
+                self.data["logging"] = self.config.logging
             if self.config.tacacs_servers or not self.omit_empty:
                 self.data["tacacs_servers"] = self.config.tacacs_servers
             if self.config.radius_servers or not self.omit_empty:

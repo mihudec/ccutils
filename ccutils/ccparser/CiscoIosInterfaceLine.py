@@ -9,6 +9,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
 
     # Regexes
     _ip_addr_regex = re.compile(pattern=r"^\sip\saddress\s(?P<ip_address>(?:\d{1,3}\.){3}\d{1,3})\s(?P<mask>(?:\d{1,3}\.){3}\d{1,3})(?:\s(?P<secondary>secondary))?", flags=re.MULTILINE)
+    _ip_unnumbered_interface_regex = re.compile(pattern=r"^ ip unnumbered (?P<unnumbered>\S+)", flags=re.MULTILINE)
     _description_regex = re.compile(pattern=r"^\sdescription\s(?P<description>.*)")
     _vrf_regex = re.compile(pattern=r"^(?:\sip)?\svrf\sforwarding\s(?P<vrf>\S+)", flags=re.MULTILINE)
     _shutdown_regex = re.compile(pattern=r"^\sshutdown", flags=re.MULTILINE)
@@ -141,6 +142,8 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             self._service_instance_encapsulation_string_regex,
             self._service_instance_bridge_domain_regex,
             self._service_instance_service_policy_regex,
+            self._ip_unnumbered_interface_regex,
+            re.compile(pattern=r"^\s*!.*", flags=re.MULTILINE),
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
             re.compile(pattern=r"^ spanning-tree portfast")
@@ -263,6 +266,8 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         """
         if len(self.re_search_children(regex="ip address")):
             return "l3"
+        elif len(self.re_search_children(regex=r"ip unnumbered")):
+            return "l3"
         else:
             return "l2"
 
@@ -298,6 +303,17 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         for candidate in candidates:
             ip_addresses.append(self._val_to_bool(entry=candidate.re_search(regex=self._ip_addr_regex, group="ALL"), key="secondary"))
         return ip_addresses
+
+    @property
+    @functools.lru_cache()
+    def ip_unnumbered_interface(self):
+        ip_unnumbered_interface = None
+        candidates = self.re_search_children(regex=self._ip_unnumbered_interface_regex, group="unnumbered")
+        if len(candidates):
+            ip_unnumbered_interface = candidates[0]
+        return ip_unnumbered_interface
+
+
 
     @property
     @functools.lru_cache()

@@ -56,6 +56,7 @@ logging host 10.0.1.3 transport udp port 1514
 logging host 10.0.1.252
 logging host 10.2.1.14
 logging host 10.2.151.15
+logging source-interface Loopback0
 
 ntp authentication-key 27 md5 36A03A8A4C00E81F03D62D8B04BBBF4D 7
 ntp authentication-key 20 md5 36A03A8A4C00E81F03D62D8B04BBBF4D 7
