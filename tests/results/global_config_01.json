@@ -71,8 +71,18 @@
       "vrf": "Test"
     }
   ],
-  "logging_global": {
-    "source": "Loopback0"
+  "logging_global":
+    {
+      "sources": [
+      {
+        "source": "Loopback0"
+      },
+      {
+        "source": "Loopback1",
+        "vrf": "Mgmt-intf"
+      }
+  ]
+
   },
   "logging_servers": [
     {

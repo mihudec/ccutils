@@ -55,8 +55,9 @@ class CiscoIosParser(BaseConfigParser):
     _aaa_server_retransmit_regex = re.compile(pattern=r"^ retransmit (?P<retransmit>\d+)")
     _aaa_server_single_connection = re.compile(pattern=r"^ (?P<single_connection>single-connection)")
 
-    _aaa_method_group_regex = re.compile(pattern=r"(?:group \S+)|local|radius|tacacs\+")
-    _aaa_authentication_base_regex = re.compile(pattern=r"^aaa authentication login (?P<name>)")
+    _aaa_methods_regex = re.compile(pattern=r"(?:group \S+)|local|radius|tacacs\+")
+    _aaa_authentication_login_regex = re.compile(pattern=r"^aaa authentication login (?P<name>\S+)")
+    _aaa_authorization_exec_regex = re.compile(pattern=r"^aaa authorization exec (?P<name>\S+)")
 
     def __init__(self, config=None, verbosity=4, **kwargs):
         super(CiscoIosParser, self).__init__(config=config, verbosity=verbosity, **kwargs)
@@ -235,11 +236,20 @@ class CiscoIosParser(BaseConfigParser):
     @functools.lru_cache()
     def logging_global_params(self):
         logging_global_params = {
-            "source": None
+            "sources": None
         }
-        source_interface_candidates = self.find_objects(regex=self._logging_source_interface_regex)
-        if len(source_interface_candidates) == 1:
-            logging_global_params["source"] = source_interface_candidates[0].re_search(regex=self._logging_source_interface_regex, group="source")
+        patterns = [
+            self._logging_source_interface_regex,
+            self._source_vrf_regex
+        ]
+        logging_global_params["sources"] = self.property_autoparse(candidate_pattern=self._logging_source_interface_regex, patterns=patterns)
+
+        is_empty = True
+        for value in logging_global_params.values():
+            if value is not None:
+                is_empty = False
+        if is_empty:
+            logging_global_params = None
         return logging_global_params
 
     @property
@@ -442,6 +452,44 @@ class CiscoIosParser(BaseConfigParser):
                     if radius_group["name"] == name:
                         radius_group["servers"] = servers
         return radius_groups
+
+    @property
+    @functools.lru_cache()
+    def aaa_login_methods(self):
+        aaa_login_methods = None
+        candidates = self.find_objects(regex=self._aaa_authentication_login_regex)
+        if len(candidates):
+            aaa_login_methods = []
+            for candidate in candidates:
+                entry = self.match_to_dict(candidate, patterns=[self._aaa_authentication_login_regex])
+                entry["methods"] = []
+                methods = re.findall(pattern=self._aaa_methods_regex, string=candidate.text)
+                for method in methods:
+                    if method.startswith("group "):
+                        entry["methods"].append(method[6:])
+                    else:
+                        entry["methods"].append(method)
+                aaa_login_methods.append(entry)
+        return aaa_login_methods
+
+    @property
+    @functools.lru_cache()
+    def aaa_authorization_exec_methods(self):
+        aaa_authorization_exec_methods = None
+        candidates = self.find_objects(regex=self._aaa_authorization_exec_regex)
+        if len(candidates):
+            aaa_authorization_exec_methods = []
+            for candidate in candidates:
+                entry = self.match_to_dict(candidate, patterns=[self._aaa_authorization_exec_regex])
+                entry["methods"] = []
+                methods = re.findall(pattern=self._aaa_methods_regex, string=candidate.text)
+                for method in methods:
+                    if method.startswith("group "):
+                        entry["methods"].append(method[6:])
+                    else:
+                        entry["methods"].append(method)
+                aaa_authorization_exec_methods.append(entry)
+        return aaa_authorization_exec_methods
 
     @property
     def vlans(self):

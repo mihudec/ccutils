@@ -97,13 +97,14 @@ class TestConfigParser01(unittest.TestCase):
         parser.minimal_results = True
         want = self.results["logging_global"]
         have = parser.logging_global_params
+        jprint(have)
         self.assertEqual(want, have)
 
     def test_logging(self):
         parser = ConfigParser(config=self.config_path, device_type="ios")
         parser.minimal_results = True
         want = {
-            "source": "Loopback0",
+            "sources": self.results["logging_global"]["sources"],
             "servers": self.results["logging_servers"],
         }
         have = parser.logging
@@ -140,6 +141,19 @@ class TestConfigParser01(unittest.TestCase):
         have = parser.radius_groups
         jprint(have)
         self.assertEqual(want, have)
+
+    def test_aaa_login_methods(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        have = parser.aaa_login_methods
+        jprint(have)
+
+    def test_aaa_authorization_exec_methods(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        have = parser.aaa_authorization_exec_methods
+        jprint(have)
+
 
 if __name__ == '__main__':
     unittest.main()

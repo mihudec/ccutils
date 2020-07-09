@@ -1,5 +1,5 @@
 from ccutils.ccparser import BaseInterfaceLine
-from ccutils.utils.common_utils import get_logger, split_interface_name
+from ccutils.utils.common_utils import get_logger, split_interface_name, value_to_bool, remove_empty_values
 from ccutils.utils import CiscoRange
 import re
 import functools
@@ -564,7 +564,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         if len(candidates):
             encapsulation = candidates[0]
             encapsulation["tag"] = int(encapsulation["tag"])
-            encapsulation["native"] = True if encapsulation["native"] == "native" else False
+            encapsulation = value_to_bool(encapsulation, keys=["native"])
         return encapsulation
 
     @property
