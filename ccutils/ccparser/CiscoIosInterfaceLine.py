@@ -45,6 +45,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
     _ip_mtu_regex = re.compile(pattern=r"^ ip mtu (?P<ip_mtu>\d+)", flags=re.MULTILINE)
     _ip_tcp_mss_regex = re.compile(pattern=r"^ ip tcp adjust-mss (?P<tcp_mss>\d+)", flags=re.MULTILINE)
     _keepalive_regex = re.compile(pattern=r"^ keepalive (?P<period>\d+) (?P<retries>\d+)")
+    _negotiation_regex = re.compile(pattern=r"^ negotiation (?P<negotiation>\S+)")
 
 
     _service_policy_regex = re.compile(pattern=r"^ service-policy (?P<direction>input|output) (?P<policy_map>\S+)", flags=re.MULTILINE)
@@ -869,6 +870,15 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         if len(candidates):
             keepalive = {k: int(v) for k, v in candidates[0].items()}
         return keepalive
+
+    @property
+    @functools.lru_cache()
+    def negotiation(self):
+        negotiation = None
+        candidates = self.re_search_children(regex=self._keepalive_regex, group="negotiation")
+        if len(candidates):
+            negotiation = candidates[0]
+        return negotiation
 
     @property
     @functools.lru_cache()

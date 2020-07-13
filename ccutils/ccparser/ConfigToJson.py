@@ -78,6 +78,12 @@ class ConfigToJson:
             if interface.service_instances or not self.omit_empty:
                 self.data["interfaces"][interface.name]["service_instances"] = interface.service_instances
 
+            # Get negotiation
+            if interface.negotiation or not self.omit_empty:
+                self.data["interfaces"][interface.name]["negotiation"] = interface.negotiation
+
+
+
 
 
             if port_mode == "l3":
