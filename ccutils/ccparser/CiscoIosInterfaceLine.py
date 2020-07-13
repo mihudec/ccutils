@@ -66,6 +66,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
     _service_instance_bridge_domain_regex = re.compile(pattern=r"^  bridge-domain (?P<number>\d+)$", flags=re.MULTILINE)
     _service_instance_service_policy_regex = re.compile(pattern=r"^  service-policy (?P<direction>input|output) (?P<policy_map>\S+)$", flags=re.MULTILINE)
     _service_instance_shutdown_regex = re.compile(pattern=r"^  shutdown$", flags=re.MULTILINE)
+    _service_instance_snmp_trap_regex = re.compile(pattern=r"^  snmp trap (?P<trap>\S+)")
 
     _ospf_process_regex = re.compile(pattern=r"^ ip ospf (?P<process_id>\d+) area (?P<area>\d+)$", flags=re.MULTILINE)
     _ospf_network_type_regex = re.compile(pattern=r"^ ip ospf network (?P<network_type>\S+)", flags=re.MULTILINE)
@@ -91,7 +92,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             list: List of unprocessed config lines
 
         """
-        unprocessed_children = self.get_children()
+        unprocessed_children = []
         regexes = [
             self._description_regex,
             self._ip_addr_regex,
@@ -148,10 +149,16 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
             re.compile(pattern=r"^ spanning-tree portfast")
         ]
-        for regex in regexes:
-            for child in self.re_search_children(regex=regex):
-                unprocessed_children.remove(child)
-        if return_type == "text":
+        for child in self.re_search_children(regex=r"^ \S"):
+            is_processed = False
+            for regex in regexes:
+                match = child.re_search(regex=regex)
+                if match:
+                    is_processed = True
+                    break
+            if not is_processed:
+                unprocessed_children.append(child)
+
             return [x.text for x in unprocessed_children]
 
     def _val_to_bool(self, entry, key):
@@ -416,8 +423,27 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             if ospf is not None:
                 ospf.update({k: None for k in self._ospf_cost_regex.groupindex.keys()})
 
-
         return ospf
+
+    @property
+    @functools.lru_cache()
+    def isis(self):
+        """
+
+        Return IS-IS interface parameters
+
+        Returns:
+            dict: IS-IS parameters
+
+            Example::
+
+                {}
+
+            Returns ``None`` if absent
+
+        """
+        isis = None
+        return isis
 
     @property
     @functools.lru_cache()
@@ -923,6 +949,24 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
                 service_instances[instance_number]["shutdown"] = True
             elif len(shutdown_candidates) == 0:
                 service_instances[instance_number]["shutdown"] = False
+
+            # SNMP Traps
+            snmp_trap_candidates = service_instance_line.re_search_children(regex=self._service_instance_snmp_trap_regex, group="trap")
+            if len(snmp_trap_candidates):
+                service_instances[instance_number]["snmp_traps"] = snmp_trap_candidates
+
+            check_patterns = [
+                self._service_instance_description_regex,
+                self._service_instance_encapsulation_mapping_regex,
+                self._service_instance_encapsulation_string_regex,
+                self._service_instance_bridge_domain_regex,
+                self._service_instance_service_policy_regex,
+                re.compile(pattern="^  (?:no )?shutdown"),
+                self._service_instance_snmp_trap_regex
+            ]
+            unprocessed_lines = [x.text for x in self.config.section_unprocessed_lines(parent=service_instance_line, check_patterns=check_patterns)]
+            if len(unprocessed_lines):
+                service_instances[instance_number]["unprocessed_lines"] = unprocessed_lines
 
 
 

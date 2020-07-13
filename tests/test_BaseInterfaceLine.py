@@ -2,6 +2,7 @@ import unittest
 import pathlib
 import json
 from ccutils.ccparser import ConfigParser
+from ccutils.utils.common_utils import jprint
 
 
 class TestL2Interface(unittest.TestCase):
@@ -202,7 +203,10 @@ class TestServiceInstances(unittest.TestCase):
                         "input": "SomeInputPolicy",
                         "output": None
                     },
-                    "shutdown": True
+                    "shutdown": True,
+                    "snmp_traps": [
+                        "link-status"
+                    ]
                 }
             },
             "GigabitEthernet0/1": {
@@ -211,7 +215,10 @@ class TestServiceInstances(unittest.TestCase):
                     "description": "SI 10 TestDescription",
                     "encapsulation": "untagged",
                     "bridge_domain": 10,
-                    "shutdown": False
+                    "shutdown": False,
+                    "snmp_traps": [
+                        "link-status"
+                    ]
                 }
             }
         }

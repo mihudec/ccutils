@@ -76,3 +76,18 @@ ntp server 10.0.0.1
 ntp server vrf Test 192.168.1.1 source Vlan1
 ntp peer 10.0.1.54 key 20 source Loopback1000
 ntp peer vrf Test 192.168.1.2 source Vlan1
+
+router isis test
+ net 49.0001.0100.0000.0002.00
+ is-type level-2-only
+ authentication mode md5 level-1
+ authentication mode md5 level-2
+ authentication key-chain ISIS-KEY level-1
+ authentication key-chain ISIS-KEY level-2
+ metric-style wide
+ fast-flood 10
+ set-overload-bit on-startup 180
+ max-lsp-lifetime 65535
+
+router ospf 1
+router ospf 2 vrf Test-VRF

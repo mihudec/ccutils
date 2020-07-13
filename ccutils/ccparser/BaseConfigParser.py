@@ -313,6 +313,15 @@ class BaseConfigParser(object):
         return entry
 
     def property_autoparse(self, candidate_pattern, patterns):
+        """
+        Function for searching multiple patterns across all occurrences of lines that matched candidate_pattern
+        Args:
+            candidate_pattern:
+            patterns:
+
+        Returns:
+
+        """
         properties = None
         candidates = self.find_objects(regex=candidate_pattern)
         if len(candidates):
@@ -323,7 +332,7 @@ class BaseConfigParser(object):
             properties.append(self.match_to_dict(line=candidate, patterns=patterns))
         return properties
 
-    def section_property_autoparse(self, candidate_pattern, patterns):
+    def section_property_autoparse(self, candidate_pattern, patterns, return_with_line=False):
         entries = None
         candidates = self.find_objects(regex=candidate_pattern)
         if len(candidates):
@@ -344,8 +353,10 @@ class BaseConfigParser(object):
                         entry.update({k: None for k in pattern.groupindex.keys()})
                 else:
                     self.logger.warning("Multiple possible updates found for Pattern: '{}' on Candidate: '{}'".format(pattern, candidate))
-
-            entries.append(entry)
+            if return_with_line:
+                entries.append((candidate, entry))
+            else:
+                entries.append(entry)
         return entries
 
     @property

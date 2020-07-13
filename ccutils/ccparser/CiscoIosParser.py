@@ -59,6 +59,12 @@ class CiscoIosParser(BaseConfigParser):
     _aaa_authentication_login_regex = re.compile(pattern=r"^aaa authentication login (?P<name>\S+)")
     _aaa_authorization_exec_regex = re.compile(pattern=r"^aaa authorization exec (?P<name>\S+)")
 
+    _routing_ospf_process_regex = re.compile(pattern=r"^router ospf (?P<process_id>)( (?P<vrf>\S+))?")
+    _routing_isis_process_regex = re.compile(pattern=r"^router isis (?P<process_id>\S+)")
+    _routing_isis_network_id_regex = re.compile(pattern=r"^ net (?P<area_id>\d{2}\.\d{4})\.(?P<system_id>(?:\d{4}\.){2}\d{4})\.(?P<nsel>\d{2})")
+    _routing_isis_authentication_mode_candidates_regex = re.compile(pattern=r"^ authentication mode (?P<auth_mode>\S+) (?P<level>level-.)")
+    _routing_isis_authentication_keychain_candidates_regex = re.compile(pattern=r"^ authentication key-chain (?P<keychain>\S+) (?P<level>level-.)")
+
     def __init__(self, config=None, verbosity=4, **kwargs):
         super(CiscoIosParser, self).__init__(config=config, verbosity=verbosity, **kwargs)
 
@@ -548,6 +554,70 @@ class CiscoIosParser(BaseConfigParser):
             else:
                 vrfs[vrf_name]["description"] = None
         return vrfs
+
+    @property
+    def ospf(self):
+        """
+
+        Returns:
+
+        """
+        raise NotImplementedError()
+
+    @property
+    def isis(self):
+        """
+
+        Returns:
+
+        """
+        isis = []
+        patterns = [
+            self._routing_isis_process_regex,
+            re.compile(pattern=r"^ is-type (?P<is_type>\S+)"),
+            re.compile(pattern=r"^ metric-style (?P<metric_style>\S+)"),
+            re.compile(pattern=r"^ fast-flood (?P<fast_flood>\S+)"),
+            re.compile(pattern=r"^ max-lsp-lifetime (?P<max_lsp_lifetime>\S+)"),
+        ]
+        candidates = self.section_property_autoparse(candidate_pattern=self._routing_isis_process_regex, patterns=patterns, return_with_line=True)
+        if len(candidates):
+            for parent, entry in candidates:
+                print(parent)
+                print(entry)
+                net_candidates = parent.re_search_children(regex=self._routing_isis_network_id_regex, group="ALL")
+                if len(net_candidates):
+                    entry["net"] = net_candidates[0]
+                authentication_mode_candidates = parent.re_search_children(regex=self._routing_isis_authentication_mode_candidates_regex, group="ALL")
+                authentication_keychain_candidates = parent.re_search_children(regex=self._routing_isis_authentication_keychain_candidates_regex, group="ALL")
+                if len(authentication_mode_candidates) or len(authentication_keychain_candidates):
+                    entry["authentication"] = {}
+                    entry["authentication"]["mode"] = authentication_mode_candidates
+                    entry["authentication"]["keychain"] = authentication_keychain_candidates
+
+                check_patterns = list(patterns)
+                check_patterns.append(self._routing_isis_network_id_regex)
+                check_patterns.append(self._routing_isis_authentication_mode_candidates_regex)
+                check_patterns.append(self._routing_isis_authentication_keychain_candidates_regex)
+                entry["unprocessed_lines"] = [x.text for x in self.section_unprocessed_lines(parent=parent, check_patterns=check_patterns)]
+
+
+            isis.append(entry)
+        else:
+            isis = None
+        return isis
+
+    def section_unprocessed_lines(self, parent, check_patterns):
+        unprocessed_lines = []
+        for child in parent.get_children():
+            processed = False
+            for regex in check_patterns:
+                match = child.re_search(regex=regex)
+                if match:
+                    processed = True
+                    break
+            if not processed:
+                unprocessed_lines.append(child)
+        return unprocessed_lines
 
 
 

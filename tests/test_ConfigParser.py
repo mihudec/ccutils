@@ -154,6 +154,12 @@ class TestConfigParser01(unittest.TestCase):
         have = parser.aaa_authorization_exec_methods
         jprint(have)
 
+    def test_isis(self):
+        parser = ConfigParser(config=self.config_path, device_type="ios")
+        parser.minimal_results = True
+        have = parser.isis
+        jprint(have)
+
 
 if __name__ == '__main__':
     unittest.main()
