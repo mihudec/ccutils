@@ -145,6 +145,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             self._service_instance_bridge_domain_regex,
             self._service_instance_service_policy_regex,
             self._ip_unnumbered_interface_regex,
+            self._negotiation_regex,
             re.compile(pattern=r"^\s*!.*", flags=re.MULTILINE),
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
@@ -875,7 +876,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
     @functools.lru_cache()
     def negotiation(self):
         negotiation = None
-        candidates = self.re_search_children(regex=self._keepalive_regex, group="negotiation")
+        candidates = self.re_search_children(regex=self._negotiation_regex, group="negotiation")
         if len(candidates):
             negotiation = candidates[0]
         return negotiation
