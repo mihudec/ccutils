@@ -518,7 +518,12 @@ class CiscoIosParser(BaseConfigParser):
             policy = candidate.re_search_children(regex=self._device_tracking_attach_policy_regex, group="policy")
             if len(policy):
                 for vlan_id in vlan_range:
-                    vlans[vlan_id]["device_tracking_policy"] = policy[0]
+                    # Fix for VLAN 1
+                    try:
+                        vlans[vlan_id]["device_tracking_policy"] = policy[0]
+                    except KeyError as e:
+                        if vlan_id == "1":
+                            vlans["1"] = {"name": "default", "device_tracking_policy": policy[0]}
         return vlans
 
     @property
