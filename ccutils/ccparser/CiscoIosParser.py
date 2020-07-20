@@ -262,7 +262,8 @@ class CiscoIosParser(BaseConfigParser):
     @functools.lru_cache()
     def logging(self):
         logging = {}
-        logging.update(self.logging_global_params)
+        if self.logging_global_params is not None:
+            logging.update(self.logging_global_params)
         logging["servers"] = self.logging_servers
 
         # Check for emptyness
