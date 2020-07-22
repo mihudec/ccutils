@@ -588,8 +588,6 @@ class CiscoIosParser(BaseConfigParser):
         candidates = self.section_property_autoparse(parent=self._routing_isis_process_regex, patterns=patterns, return_with_line=True)
         if len(candidates):
             for parent, entry in candidates:
-                print(parent)
-                print(entry)
                 net_candidates = parent.re_search_children(regex=self._routing_isis_network_id_regex, group="ALL")
                 if len(net_candidates):
                     entry["net"] = net_candidates[0]

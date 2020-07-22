@@ -23,9 +23,6 @@ class TestL3Interface(unittest.TestCase):
                 print(interface_line)
                 want = self.results["interfaces"][interface]["isis"]
                 have = interface_line.isis
-                jprint(have)
-
-
                 self.assertEqual(want, have)
 
     def test_bdf(self):
@@ -37,7 +34,4 @@ class TestL3Interface(unittest.TestCase):
                 print(interface_line)
                 want = self.results["interfaces"][interface]["bfd"]
                 have = interface_line.bfd
-                jprint(have)
-
-
                 self.assertEqual(want, have)

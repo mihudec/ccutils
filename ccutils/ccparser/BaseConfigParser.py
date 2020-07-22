@@ -307,11 +307,9 @@ class BaseConfigParser(object):
                 entry.update(match_result)
             else:
                 if self.minimal_results:
-                    print("Min")
                     continue
                 else:
                     entry.update({k: None for k in pattern.groupindex.keys()})
-        print(entry)
         return entry
 
     def property_autoparse(self, candidate_pattern, patterns):
