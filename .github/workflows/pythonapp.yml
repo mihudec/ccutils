@@ -39,6 +39,9 @@ jobs:
     - name: Test BaseInterfaceLine
       run: |
         python -m unittest discover -s ./tests -p "test_BaseInterfaceLine.py"
+    - name: Test Cisco Ios Interface Line
+        run: |
+          python -m unittest discover -s ./tests -p "test_CiscoIosInterface.py"
     - name: Test ConfigToJson
       run: |
         python -m unittest discover -s ./tests -p "test_ConfigToJson.py"

@@ -1,0 +1,20 @@
+interface TenGigabitEthernet0/0/8
+ mtu 9214
+ ip address 10.0.12.1 255.255.255.0
+ ip router isis tsdr
+ load-interval 30
+ carrier-delay msec 0
+ cdp enable
+ mpls traffic-eng tunnels
+ synchronous mode
+ bfd template BFD-1hop-5ms
+ isis circuit-type level-2-only
+ isis network point-to-point
+ isis metric 11 level-1
+ isis metric 11 level-2
+ isis authentication mode md5
+ isis authentication key-chain ISIS-KEY
+ service-policy output PM-MPLS-10G-Out
+ ip rsvp bandwidth percent 90
+ ip rsvp signalling hello graceful-restart
+end

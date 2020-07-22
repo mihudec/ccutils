@@ -165,7 +165,23 @@ def remove_empty_values(entry: dict) -> dict:
     return {k: v for k, v in entry.items() if v is not None}
 
 
+def strip_none(data):
+    # https://stackoverflow.com/questions/20558699/python-how-recursively-remove-none-values-from-a-nested-data-structure-lists-a
+    if isinstance(data, dict):
+        return {k: strip_none(v) for k, v in data.items() if k is not None and v is not None}
+    elif isinstance(data, list):
+        return [strip_none(item) for item in data if item is not None]
+    elif isinstance(data, tuple):
+        return tuple(strip_none(item) for item in data if item is not None)
+    elif isinstance(data, set):
+        return {strip_none(item) for item in data if item is not None}
+    else:
+        return data
+
+
 def value_to_bool(entry: dict, keys: list, keep_none=False) -> dict:
+    if not isinstance(keys, list):
+        keys = list[keys]
     for key in keys:
         if key not in entry.keys():
             continue

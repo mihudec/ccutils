@@ -318,7 +318,7 @@ class CiscoIosParser(BaseConfigParser):
             self._aaa_server_retransmit_regex,
             self._aaa_server_single_connection
         ]
-        tacacs_servers = self.section_property_autoparse(candidate_pattern=self._tacacs_server_regex, patterns=patterns)
+        tacacs_servers = self.section_property_autoparse(parent=self._tacacs_server_regex, patterns=patterns)
         if tacacs_servers is not None:
             for entry in tacacs_servers:
                 entry = value_to_bool(entry=entry, keys=["single_connection"])
@@ -371,7 +371,7 @@ class CiscoIosParser(BaseConfigParser):
             self._radius_auth_port_regex,
             self._radius_acct_port_regex
         ]
-        radius_servers = self.section_property_autoparse(candidate_pattern=self._radius_server_regex, patterns=patterns)
+        radius_servers = self.section_property_autoparse(parent=self._radius_server_regex, patterns=patterns)
         if radius_servers is not None:
             for entry in radius_servers:
                 entry = value_to_bool(entry=entry, keys=["single_connection"])
@@ -409,7 +409,7 @@ class CiscoIosParser(BaseConfigParser):
             self._aaa_group_vrf_regex,
             self._aaa_group_source_interface_regex,
         ]
-        tacacs_groups = self.section_property_autoparse(candidate_pattern=self._aaa_tacacs_group_regex, patterns=patterns)
+        tacacs_groups = self.section_property_autoparse(parent=self._aaa_tacacs_group_regex, patterns=patterns)
         if tacacs_groups is not None:
             candidates = self.find_objects(regex=self._aaa_tacacs_group_regex)
             for candidate in candidates:
@@ -449,7 +449,7 @@ class CiscoIosParser(BaseConfigParser):
             self._aaa_group_vrf_regex,
             self._aaa_group_source_interface_regex
         ]
-        radius_groups = self.section_property_autoparse(candidate_pattern=self._aaa_radius_group_regex, patterns=patterns)
+        radius_groups = self.section_property_autoparse(parent=self._aaa_radius_group_regex, patterns=patterns)
         if radius_groups is not None:
             candidates = self.find_objects(regex=self._aaa_radius_group_regex)
             for candidate in candidates:
@@ -585,7 +585,7 @@ class CiscoIosParser(BaseConfigParser):
             re.compile(pattern=r"^ fast-flood (?P<fast_flood>\S+)"),
             re.compile(pattern=r"^ max-lsp-lifetime (?P<max_lsp_lifetime>\S+)"),
         ]
-        candidates = self.section_property_autoparse(candidate_pattern=self._routing_isis_process_regex, patterns=patterns, return_with_line=True)
+        candidates = self.section_property_autoparse(parent=self._routing_isis_process_regex, patterns=patterns, return_with_line=True)
         if len(candidates):
             for parent, entry in candidates:
                 print(parent)

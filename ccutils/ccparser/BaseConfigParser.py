@@ -307,9 +307,11 @@ class BaseConfigParser(object):
                 entry.update(match_result)
             else:
                 if self.minimal_results:
+                    print("Min")
                     continue
                 else:
-                    entry.update({k:None for k in pattern.groupindex.keys()})
+                    entry.update({k: None for k in pattern.groupindex.keys()})
+        print(entry)
         return entry
 
     def property_autoparse(self, candidate_pattern, patterns):
@@ -332,16 +334,20 @@ class BaseConfigParser(object):
             properties.append(self.match_to_dict(line=candidate, patterns=patterns))
         return properties
 
-    def section_property_autoparse(self, candidate_pattern, patterns, return_with_line=False):
+    def section_property_autoparse(self, parent, patterns, return_with_line=False):
         entries = None
-        candidates = self.find_objects(regex=candidate_pattern)
+        if isinstance(parent, BaseConfigLine):
+            candidates = [parent]
+        elif isinstance(parent, (str, self.PATTERN_TYPE)):
+            candidates = self.find_objects(regex=parent)
         if len(candidates):
             entries = []
         else:
             return entries
         for candidate in candidates:
             entry = {}
-            entry.update(self.match_to_dict(line=candidate, patterns=[candidate_pattern]))
+            if isinstance(parent, (str, self.PATTERN_TYPE)):
+                entry.update(self.match_to_dict(line=candidate, patterns=[parent]))
             for pattern in patterns:
                 updates = candidate.re_search_children(regex=pattern, group="ALL")
                 if len(updates) == 1:

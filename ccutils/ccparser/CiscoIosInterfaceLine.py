@@ -1,5 +1,5 @@
 from ccutils.ccparser import BaseInterfaceLine
-from ccutils.utils.common_utils import get_logger, split_interface_name, value_to_bool, remove_empty_values
+from ccutils.utils.common_utils import get_logger, split_interface_name, value_to_bool, remove_empty_values, strip_none
 from ccutils.utils import CiscoRange
 import re
 import functools
@@ -74,6 +74,21 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
     _ospf_priority_regex = re.compile(pattern=r"^ ip ospf priority (?P<priority>\d+)", flags=re.MULTILINE)
     _ospf_cost_regex = re.compile(pattern=r"^ ip ospf cost (?P<cost>\d+)", flags=re.MULTILINE)
 
+    _isis_process_regex = re.compile(pattern=r"^ ip router isis (?P<process_id>\S+)$", flags=re.MULTILINE)
+    _isis_network_type_regex = re.compile(pattern=r"^ isis network (?P<network_type>\S+)", flags=re.MULTILINE)
+    _isis_circuit_type_regex = re.compile(pattern=r"^ isis circuit-type (?P<circuit_type>\S+)", flags=re.MULTILINE)
+    _isis_metric_regex = re.compile(pattern=r"^ isis metric (?P<metric>\d+) (?P<level>level-[1-2])", flags=re.MULTILINE)
+    _isis_authentication_mode_regex = re.compile(pattern=r"^ isis authentication mode (?P<mode>\S+)", flags=re.MULTILINE)
+    _isis_authentication_keychain_regex = re.compile(pattern=r"^ isis authentication key-chain (?P<keychain>\S+)", flags=re.MULTILINE)
+
+    _bfd_template_regex = re.compile(pattern=r"^ bfd template (?P<template>\S+)", flags=re.MULTILINE)
+
+
+
+
+
+
+
 
     def __init__(self, number, text, config, verbosity=3):
         super(CiscoIosInterfaceLine, self).__init__(number=number, text=text, config=config, verbosity=verbosity, name="CiscoIosInterfaceLine")
@@ -103,6 +118,13 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             self._ospf_process_regex,
             self._ospf_network_type_regex,
             self._ospf_cost_regex,
+            self._isis_process_regex,
+            self._isis_metric_regex,
+            self._isis_network_type_regex,
+            self._isis_circuit_type_regex,
+            self._isis_authentication_mode_regex,
+            self._isis_authentication_keychain_regex,
+            self._bfd_template_regex,
             self._cdp_regex,
             self._logging_event_regex,
             self._standby_ip_regex,
@@ -444,8 +466,69 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             Returns ``None`` if absent
 
         """
-        isis = None
+        isis = {}
+        # ISIS Process ID Section
+        patterns = [
+            self._isis_process_regex,
+            self._isis_network_type_regex,
+            self._isis_circuit_type_regex
+        ]
+        for regex in patterns:
+            candidates = self.re_search_children(regex=regex, group="ALL")
+            if len(candidates):
+                isis.update(candidates[0])
+
+        # Metrics
+        isis["metric"] = []
+        candidates = self.re_search_children(regex=self._isis_metric_regex, group="ALL")
+        if len(candidates):
+            for candidate in candidates:
+                isis["metric"].append(candidate)
+
+        # Authentication mode
+        isis["authentication"] = {}
+        candidates = self.re_search_children(regex=self._isis_authentication_mode_regex, group="ALL")
+        if len(candidates):
+            if isis is None:
+                isis = {"authentication": {}}
+        if len(candidates) == 1:
+            isis["authentication"].update(candidates[0])
+        elif len(candidates) == 0:
+            isis["authentication"].update({k: None for k in self._isis_authentication_mode_regex.groupindex.keys()})
+
+        # Authentication keychain
+        candidates = self.re_search_children(regex=self._isis_authentication_keychain_regex, group="ALL")
+        if len(candidates):
+            if isis is None:
+                isis = {"authentication": {}}
+        if len(candidates) == 1:
+            isis["authentication"].update(candidates[0])
+        elif len(candidates) == 0:
+            isis["authentication"].update({k: None for k in self._isis_authentication_keychain_regex.groupindex.keys()})
+
+        if self.config.minimal_results:
+            isis = strip_none(isis)
+            if not any(isis["metric"]):
+                del isis["metric"]
+            if not any(isis["authentication"].values()):
+                del isis["authentication"]
+
+        if not any(isis.values()):
+            isis = None
+
         return isis
+
+    @property
+    @functools.lru_cache()
+    def bfd(self):
+        bfd = {}
+        candidates = self.re_search_children(regex=self._bfd_template_regex, group="ALL")
+        if len(candidates) == 1:
+            bfd.update(candidates[0])
+        if not any(bfd.values()):
+            bfd = None
+
+        return bfd
 
     @property
     @functools.lru_cache()

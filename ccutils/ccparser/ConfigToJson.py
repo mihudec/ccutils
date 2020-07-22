@@ -118,7 +118,8 @@ class ConfigToJson:
                     self.data["interfaces"][interface.name]["l3"]["encapsulation"] = interface.encapsulation
                 if interface.ospf or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["ospf"] = interface.ospf
-
+                if interface.isis or not self.omit_empty:
+                    self.data["interfaces"][interface.name]["l3"]["isis"] = interface.isis
                 # IP Unnumbered
                 if interface.ip_unnumbered_interface or not self.omit_empty:
                     self.data["interfaces"][interface.name]["l3"]["unnumbered"] = interface.ip_unnumbered_interface

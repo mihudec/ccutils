@@ -1,0 +1,28 @@
+{
+  "interfaces": {
+    "TenGigabitEthernet0/0/8": {
+      "isis": {
+        "process_id": "tsdr",
+        "network_type": "point-to-point",
+        "circuit_type": "level-2-only",
+        "metric": [
+          {
+            "metric": "11",
+            "level": "level-1"
+          },
+          {
+            "metric": "11",
+            "level": "level-2"
+          }
+        ],
+        "authentication": {
+          "mode": "md5",
+          "keychain": "ISIS-KEY"
+        }
+      },
+      "bfd": {
+        "template": "BFD-1hop-5ms"
+      }
+    }
+  }
+}
