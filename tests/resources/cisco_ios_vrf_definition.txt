@@ -1,0 +1,24 @@
+vrf definition VRF-A
+ rd 65421:1327
+ !
+ address-family ipv4
+  route-target export 65000:1327
+  route-target import 65000:327
+ exit-address-family
+!
+vrf definition VRF-B
+ rd 65421:11
+ !
+ address-family ipv4
+  route-target export 65000:11
+  route-target import 65000:10
+ exit-address-family
+!
+vrf definition Mgmt-intf
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family ipv6
+ exit-address-family
+!

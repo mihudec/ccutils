@@ -65,6 +65,12 @@ class CiscoIosParser(BaseConfigParser):
     _routing_isis_authentication_mode_candidates_regex = re.compile(pattern=r"^ authentication mode (?P<auth_mode>\S+) (?P<level>level-.)")
     _routing_isis_authentication_keychain_candidates_regex = re.compile(pattern=r"^ authentication key-chain (?P<keychain>\S+) (?P<level>level-.)")
 
+    _vrf_definition_regex = re.compile(pattern=r"^(?:ip )?vrf(?: definition)? (?P<name>\S+)")
+    _vrf_rd_regex = re.compile(pattern=r"rd (?P<rd>\d+:\d+)")
+    _address_family_regex = re.compile(pattern=r"address-family (?P<afi>\S+)(?:(?P<vrf>\S+))?")
+    _description_regex = re.compile(pattern=r"description (?P<description>.*?)$")
+    _vrf_afi_rt_regex = re.compile(pattern=r"route-target (?P<action>import|export) (?P<rt>\d+:\d+)")
+
     def __init__(self, config=None, verbosity=4, **kwargs):
         super(CiscoIosParser, self).__init__(config=config, verbosity=verbosity, **kwargs)
 
@@ -540,25 +546,37 @@ class CiscoIosParser(BaseConfigParser):
         vrf_name_regex = re.compile(pattern=r"^(?:ip )?vrf(?: definition)? (?P<vrf_name>\S+)", flags=re.MULTILINE)
         rd_regex = re.compile(pattern=r"^ rd (?P<rd>\S+)", flags=re.MULTILINE)
         description_regex = re.compile(pattern=r"^ description (?P<description>.*)", flags=re.MULTILINE)
-        candidates = self.find_objects(regex=vrf_name_regex)
+        candidates = self.find_objects(regex=self._vrf_definition_regex)
         if len(candidates):
             vrfs = {}
         for candidate in candidates:
-            vrf_name = candidate.re_search(regex=vrf_name_regex, group="vrf_name")
+            vrf_name = candidate.re_search(regex=self._vrf_definition_regex, group="name")
             if vrf_name:
                 vrfs[vrf_name] = {}
             else:
                 continue
-            rd_candidates = candidate.re_search_children(regex=rd_regex, group="rd")
+            rd_candidates = candidate.re_search_children(regex=self._vrf_rd_regex, group="ALL")
             if len(rd_candidates):
-                vrfs[vrf_name]["rd"] = rd_candidates[0]
+                vrfs[vrf_name].update(rd_candidates[0])
             else:
                 vrfs[vrf_name]["rd"] = None
-            description_candidates = candidate.re_search_children(regex=description_regex, group="description")
+            description_candidates = candidate.re_search_children(regex=self._description_regex, group="ALL")
             if len(description_candidates):
-                vrfs[vrf_name]["description"] = description_candidates[0]
+                vrfs[vrf_name].update(description_candidates[0])
             else:
                 vrfs[vrf_name]["description"] = None
+
+            # Address Family Section
+            address_families = []
+            afi_lines = candidate.re_search_children(regex=self._address_family_regex)
+            for line in afi_lines:
+                print(line)
+                entry = line.re_search(regex=self._address_family_regex, group="ALL")
+                entry = remove_empty_values(entry)
+                address_families.append(entry)
+            if len(address_families):
+                vrfs[vrf_name]["address_families"] = address_families
+
         return vrfs
 
     @property
