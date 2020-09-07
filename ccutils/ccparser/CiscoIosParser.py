@@ -641,5 +641,126 @@ class CiscoIosParser(BaseConfigParser):
                 unprocessed_lines.append(child)
         return unprocessed_lines
 
+    @property
+    @functools.lru_cache()
+    def all_ipv4_physical_addresses(self):
+        """
+        Get all physical IPv4 addresses of device config.
+
+        Returns:
+            list: List IPv4 Addresses
+
+            Example::
+
+                [
+                    "192.168.100.2",
+                    "192.168.101.2"
+                ]
+
+            Returns empty list (``[]``) if absent
+
+        """
+        addresses = []
+        for interface_line in self.interface_lines:
+            if "l3" in interface_line.flags:
+                addresses.extend([x["ip_address"] for x in interface_line.ip_addresses])
+        return addresses
+
+    @functools.lru_cache()
+    def vrf_ipv4_physical_addresses(self, vrf="global"):
+        """
+        Get all physical IPv4 addresses in particular VRF. By default returns all IP addresses from global routing table
+
+        Args:
+            vrf: Name of the VRF (default is `"global"`)
+
+        Returns:
+            list: List IPv4 Addresses
+
+            Example::
+
+                [
+                    "192.168.100.2",
+                    "192.168.101.2"
+                ]
+
+            Returns empty list (``[]``) if absent
+
+        """
+        addresses = []
+        # Filter L3 Interfaces
+        interfaces = [x for x in self.interface_lines if "l3" in x.flags]
+        # Filter VRF interfaces
+        if vrf == "global":
+            interfaces = [x for x in interfaces if x.vrf is None]
+        else:
+            interfaces = [x for x in interfaces if x.vrf == vrf]
+        for interface in interfaces:
+            addresses.extend([x["ip_address"] for x in interface.ip_addresses])
+        return addresses
+
+    @property
+    @functools.lru_cache()
+    def all_ipv4_standby_addresses(self):
+        """
+
+        Returns:
+            list: List IPv4 Addresses
+
+            Example::
+
+                [
+                    "192.168.100.1",
+                    "192.168.101.1"
+                ]
+
+            Returns empty list (``[]``) if absent
+
+        """
+        addresses = []
+        # Filter L3 interfaces
+        interfaces = [x for x in self.interface_lines if "l3" in x.flags]
+        # Filter Stadnby Interfaces
+        interfaces = [x for x in interfaces if x.standby is not None]
+        for interface in interfaces:
+            for group in interface.standby["groups"].values():
+                addresses.extend([x["ip_address"] for x in group["ip_addresses"]])
+        return addresses
+
+    @functools.lru_cache()
+    def vrf_ipv4_standby_addresses(self, vrf="global"):
+        """
+
+        Args:
+            vrf:  Name of the VRF (default is `"global"`)
+
+        Returns:
+            list: List IPv4 Addresses
+
+            Example::
+
+                [
+                    "192.168.100.1",
+                    "192.168.101.1"
+                ]
+
+            Returns empty list (``[]``) if absent
+
+        """
+        addresses = []
+        # Filter L3 interfaces
+        interfaces = [x for x in self.interface_lines if "l3" in x.flags]
+        # Filter Stadnby Interfaces
+        interfaces = [x for x in interfaces if x.standby is not None]
+        # Filter VRF Interfaces
+        if vrf == "global":
+            interfaces = [x for x in interfaces if x.vrf is None]
+        else:
+            interfaces = [x for x in interfaces if x.vrf == vrf]
+
+        for interface in interfaces:
+            for group in interface.standby["groups"].values():
+                addresses.extend([x["ip_address"] for x in group["ip_addresses"]])
+        return addresses
 
 

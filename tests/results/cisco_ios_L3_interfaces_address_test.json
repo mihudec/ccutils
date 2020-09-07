@@ -1,0 +1,18 @@
+{
+  "all_ipv4_physical_addresses": [
+    "192.168.100.2",
+    "192.168.101.2"
+  ],
+  "vrf_ipv4_physical_addresses": [
+    "192.168.100.2",
+    "192.168.101.2"
+  ],
+  "all_ipv4_standby_addresses":  [
+    "192.168.100.1",
+    "192.168.101.1"
+  ],
+  "vrf_ipv4_standby_addresses":  [
+    "192.168.100.1",
+    "192.168.101.1"
+  ]
+}

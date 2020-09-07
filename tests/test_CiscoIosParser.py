@@ -27,3 +27,43 @@ class TestCiscoIosParser(unittest.TestCase):
 
             self.assertEqual(want, have)
 
+    def test_all_ipv4_physical_addresses(self):
+        test_file_base = "cisco_ios_L3_interfaces_address_test"
+        with self.subTest(msg=test_file_base):
+            config = self.get_config(test_file_name=test_file_base)
+            want = self.get_results(results_file_name=test_file_base)["all_ipv4_physical_addresses"]
+            have = config.all_ipv4_physical_addresses
+            jprint(have)
+
+            self.assertEqual(want, have)
+
+    def test_vrf_ipv4_physical_addresses(self):
+        test_file_base = "cisco_ios_L3_interfaces_address_test"
+        with self.subTest(msg=test_file_base):
+            config = self.get_config(test_file_name=test_file_base)
+            want = self.get_results(results_file_name=test_file_base)["vrf_ipv4_physical_addresses"]
+            have = config.vrf_ipv4_physical_addresses(vrf="TEST")
+            jprint(have)
+
+            self.assertEqual(want, have)
+
+    def test_all_ipv4_standby_addresses(self):
+        test_file_base = "cisco_ios_L3_interfaces_address_test"
+        with self.subTest(msg=test_file_base):
+            config = self.get_config(test_file_name=test_file_base)
+            want = self.get_results(results_file_name=test_file_base)["all_ipv4_standby_addresses"]
+            have = config.all_ipv4_standby_addresses
+            jprint(have)
+
+            self.assertEqual(want, have)
+
+    def test_vrf_ipv4_standby_addresses(self):
+        test_file_base = "cisco_ios_L3_interfaces_address_test"
+        with self.subTest(msg=test_file_base):
+            config = self.get_config(test_file_name=test_file_base)
+            want = self.get_results(results_file_name=test_file_base)["vrf_ipv4_standby_addresses"]
+            have = config.vrf_ipv4_standby_addresses(vrf="TEST")
+            jprint(have)
+
+            self.assertEqual(want, have)
+
