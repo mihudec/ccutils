@@ -570,7 +570,7 @@ class CiscoIosParser(BaseConfigParser):
             address_families = []
             afi_lines = candidate.re_search_children(regex=self._address_family_regex)
             for line in afi_lines:
-                print(line)
+                # print(line)
                 entry = line.re_search(regex=self._address_family_regex, group="ALL")
                 entry = remove_empty_values(entry)
                 address_families.append(entry)
