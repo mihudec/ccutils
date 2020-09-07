@@ -26,9 +26,9 @@ author = 'mihudec'
 add_module_names = False
 
 # The short X.Y version
-version = '0.2.12'
+version = '0.2.13'
 # The full version, including alpha/beta/rc tags
-release = '0.2.12-beta'
+release = '0.2.13-beta'
 
 
 # -- General configuration ---------------------------------------------------
