@@ -30,12 +30,18 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Show Folder Structure
       run: ls -la ./tests
+    - name: Test CommonUtils
+      run: |
+        python -m unittest discover -s ./tests -p "test_CommonUtils.py"
     - name: Test CiscoRange
       run: |
         python -m unittest discover -s ./tests -p "test_CiscoRange.py"
     - name: Test BaseConfigParser
       run: |
         python -m unittest discover -s ./tests -p "test_BaseConfigParser.py"
+    - name: Test CiscoIosParser
+      run: |
+        python -m unittest discover -s ./tests -p "test_CiscoIosParser.py"
     - name: Test BaseInterfaceLine
       run: |
         python -m unittest discover -s ./tests -p "test_BaseInterfaceLine.py"

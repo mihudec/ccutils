@@ -72,7 +72,8 @@ def split_interface_name(interface: str):
         list: List containing name and number of interface, such as ``["GigabitEthernet", "0/10"]``
 
     """
-    pattern = re.compile(pattern=r"(?P<name>^[A-z\-]+(?=\d))(?P<number>[\d+\/]+)")
+    #pattern = re.compile(pattern=r"(?P<name>^[A-z\-]+(?=\d))(?P<number>[\d+\/]+)")
+    pattern = re.compile(pattern=r"(?P<name>[A-z]{2,}(?:[A-z\-])*)(?P<number>\d+(?:\/\d+)*(?:\:\d+)?(?:\.\d+)?)")
     try:
         match = re.match(pattern=pattern, string=interface)
     except TypeError as e:

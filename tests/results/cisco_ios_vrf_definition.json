@@ -1,3 +1,44 @@
 {
-  "vrfs": {}
+  "VRF-A": {
+    "rd": "65421:1327",
+    "description": null,
+    "address_families": [
+      {
+        "afi": "ipv4",
+        "import": [
+          "65000:327"
+        ],
+        "export": [
+          "65000:1327"
+        ]
+      }
+    ]
+  },
+  "VRF-B": {
+    "rd": "65421:11",
+    "description": null,
+    "address_families": [
+      {
+        "afi": "ipv4",
+        "import": [
+          "65000:10"
+        ],
+        "export": [
+          "65000:11"
+        ]
+      }
+    ]
+  },
+  "Mgmt-intf": {
+    "rd": null,
+    "description": null,
+    "address_families": [
+      {
+        "afi": "ipv4"
+      },
+      {
+        "afi": "ipv6"
+      }
+    ]
+  }
 }

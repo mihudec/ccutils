@@ -1,5 +1,6 @@
 vrf definition VRF-A
  rd 65421:1327
+ description
  !
  address-family ipv4
   route-target export 65000:1327

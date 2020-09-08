@@ -570,8 +570,13 @@ class CiscoIosParser(BaseConfigParser):
             address_families = []
             afi_lines = candidate.re_search_children(regex=self._address_family_regex)
             for line in afi_lines:
-                # print(line)
+                print(line)
                 entry = line.re_search(regex=self._address_family_regex, group="ALL")
+                rt_candidates = line.re_search_children(regex=self._vrf_afi_rt_regex, group="ALL")
+                print(rt_candidates)
+                if len(rt_candidates):
+                    entry["import"] = [x["rt"] for x in rt_candidates if x["action"] == "import"]
+                    entry["export"] = [x["rt"] for x in rt_candidates if x["action"] == "export"]
                 entry = remove_empty_values(entry)
                 address_families.append(entry)
             if len(address_families):
