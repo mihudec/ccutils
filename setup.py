@@ -5,7 +5,7 @@ with open("requirements.txt", "r") as fs:
 
 setup(
     name='ccutils',
-    version='0.2.14',
+    version='0.2.15',
     packages=find_packages(exclude=["test", "examples"]),
     url='https://github.org/mihudec/ccutils',
     license='',
