@@ -1,0 +1,12 @@
+{
+  "interfaces": {
+    "TenGigabitEthernet1/0/1": {
+      "dhcp_snooping": {
+        "trust": true
+      },
+      "unprocessed_lines": [
+        " ip dhcp snooping trust"
+      ]
+    }
+  }
+}

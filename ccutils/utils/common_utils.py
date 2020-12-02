@@ -5,6 +5,28 @@ import sys
 import re
 from collections import OrderedDict
 
+INTERFACE_FLAGS_SUBSTRING_MAP = {
+    "physical": [
+        "Ethernet",
+        "GigE"
+    ],
+    "virtual": [
+        "Loopback",
+        "Vlan"
+    ],
+    "port-channel": [
+        "Port-channel"
+    ]
+}
+
+PHYSICAL_INTERFACE_SUBSTRINGS = [
+    "Ethernet",
+    "GigE"
+]
+VIRTUAL_INTERFACE_SUBSTRINGS = [
+    "Loopback",
+    "Vlan"
+]
 
 class UnsortableList(list):
     def sort(self, *args, **kwargs):
@@ -28,9 +50,12 @@ def get_logger(name, verbosity=4):
         5: logging.DEBUG
     }
 
+    threading_formatter_string = '[%(asctime)s] [%(levelname)s]\t[%(name)s][%(threadName)s][%(module)s][%(funcName)s]\t%(message)s'
+    single_formatter_string = '[%(asctime)s] [%(levelname)s]\t[%(name)s][%(module)s][%(funcName)s]\t%(message)s'
+
     logger = logging.getLogger(name)
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('[%(asctime)s] [%(levelname)s]\t[%(module)s][%(funcName)s]\t%(message)s')
+    formatter = logging.Formatter(single_formatter_string)
     handler.setFormatter(formatter)
     if not len(logger.handlers):
         logger.addHandler(handler)
@@ -253,6 +278,16 @@ def has_old_pyyaml():
         return False
 
     return version.parse(yaml.__version__) < version.parse("5.1")
+
+def get_flags_from_interface_name(interface):
+    flags = set()
+    for flag, subs in INTERFACE_FLAGS_SUBSTRING_MAP.items():
+        for sub in subs:
+            if sub in interface:
+                flags.add(flag)
+    if re.search(pattern=r"\d+\.d+", string=interface):
+        flags.add("subinterface")
+    return list(flags)
 
 def load_excel_sheet(file, sheet_name):
     try:

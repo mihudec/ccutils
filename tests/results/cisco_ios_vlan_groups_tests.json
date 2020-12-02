@@ -1,0 +1,12 @@
+{
+  "vlan_groups": [
+    {
+      "group":  "GROUP01",
+      "vlan_id": "1"
+    },
+    {
+      "group":  "GROUP02",
+      "vlan_id": "2"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
 include requirements.txt
-include CHANGELOG.txt
+include CHANGELOG.md
 recursive-include ccutils/templates *
 recursive-include docs *

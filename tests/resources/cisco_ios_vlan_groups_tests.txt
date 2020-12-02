@@ -1,0 +1,2 @@
+vlan group GROUP01 vlan-list 1
+vlan group GROUP02 vlan-list 2

@@ -72,7 +72,7 @@ class CiscoIosParser(BaseConfigParser):
     _vrf_afi_rt_regex = re.compile(pattern=r"route-target (?P<action>import|export) (?P<rt>\d+:\d+)")
 
     def __init__(self, config=None, verbosity=4, **kwargs):
-        super(CiscoIosParser, self).__init__(config=config, verbosity=verbosity, **kwargs)
+        super(CiscoIosParser, self).__init__(config=config, verbosity=verbosity, name="CiscoIosParser", **kwargs)
 
     @property
     @functools.lru_cache()
@@ -535,8 +535,7 @@ class CiscoIosParser(BaseConfigParser):
 
     @property
     def vlan_groups(self):
-        vlan_group_regex = re.compile(pattern=r"^vlan group (?P<group>\S+) vlan-list (?P<vlan_id>\d+)",
-                                      flags=re.MULTILINE)
+        vlan_group_regex = re.compile(pattern=r"^vlan group (?P<group>\S+) vlan-list (?P<vlan_id>\d+)", flags=re.MULTILINE)
         candidates = self.find_objects(regex=vlan_group_regex)
         return [x.re_search(regex=vlan_group_regex, group="ALL") for x in candidates]
 

@@ -24,7 +24,7 @@ class BaseConfigParser(object):
     _vlan_configuration_regex = re.compile(pattern=r"^vlan configuration (?P<vlan_range>[\d\-,]+)", flags=re.MULTILINE)
     _device_tracking_attach_policy_regex = re.compile(pattern=r"^ device-tracking attach-policy (?P<policy>\S+)")
 
-    def __init__(self, config=None, verbosity=4, **kwargs):
+    def __init__(self, config=None, verbosity=4, name="BaseConfigParser", **kwargs):
         """
         Base class for parsing Cisco-like configs
 
@@ -71,7 +71,7 @@ class BaseConfigParser(object):
 
         """
         self.verbosity = verbosity
-        self.logger = get_logger(name="ConfigParser", verbosity=verbosity)
+        self.logger = get_logger(name=name, verbosity=verbosity)
         self.config = config
         self.path = self._check_path(kwargs.get("filepath", None)) if kwargs.get("filepath", None) else None
 

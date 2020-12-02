@@ -67,3 +67,14 @@ class TestCiscoIosParser(unittest.TestCase):
 
             self.assertEqual(want, have)
 
+    def test_vlan_groups(self):
+        test_file_base = "cisco_ios_vlan_groups_tests"
+        with self.subTest(msg=test_file_base):
+            config = self.get_config(test_file_name=test_file_base)
+            want = self.get_results(results_file_name=test_file_base)["vlan_groups"]
+            have = config.vlan_groups
+            jprint(have)
+
+            self.assertEqual(want, have)
+
+

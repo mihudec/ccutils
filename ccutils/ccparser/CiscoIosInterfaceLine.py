@@ -25,6 +25,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
 
     _helper_address_regex = re.compile(pattern=r"^\sip\shelper-address\s(?P<helper_address>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
 
+    _ip_dhcp_snooping_trust_regex = re.compile(r"^\sip dhcp snooping trust$", flags=re.MULTILINE)
 
     _native_vlan_regex = re.compile(pattern=r"^ switchport trunk native vlan (?P<native_vlan>\d+)", flags=re.MULTILINE)
     _trunk_encapsulation_regex = re.compile(pattern=r"^ switchport trunk encapsulation (?P<encapsulation>dot1q|isl|negotiate)", flags=re.MULTILINE)
@@ -108,7 +109,8 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             list: List of unprocessed config lines
 
         """
-        unprocessed_children = []
+        unprocessed_children = self.get_children()
+
         regexes = [
             self._description_regex,
             self._ip_addr_regex,
@@ -168,21 +170,20 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             self._service_instance_service_policy_regex,
             self._ip_unnumbered_interface_regex,
             self._negotiation_regex,
+            self._ip_dhcp_snooping_trust_regex,
             re.compile(pattern=r"^\s*!.*", flags=re.MULTILINE),
             re.compile(pattern=r"^\sno\sip\saddress", flags=re.MULTILINE),
             re.compile(pattern=r"^ (no )?switchport$", flags=re.MULTILINE),
             re.compile(pattern=r"^ spanning-tree portfast")
         ]
-        for child in self.re_search_children(regex=r"^ \S"):
-            is_processed = False
-            for regex in regexes:
-                match = child.re_search(regex=regex)
-                if match:
-                    is_processed = True
-                    break
-            if not is_processed:
-                unprocessed_children.append(child)
-
+        for regex in regexes:
+            for child in self.re_search_children(regex=regex):
+                unprocessed_children.remove(child)
+        if return_type == "text":
+            return [x.text for x in unprocessed_children]
+        elif return_type == "obj":
+            return unprocessed_children
+        else:
             return [x.text for x in unprocessed_children]
 
     def _val_to_bool(self, entry, key):
@@ -1129,3 +1130,19 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         if len(candidates):
             device_tracking_policy = candidates[0]
         return device_tracking_policy
+    @property
+    @functools.lru_cache()
+    def dhcp_snooping(self):
+        dhcp_snooping = {"trust": None}
+        trust_candidates = self.re_search_children(regex=self._ip_dhcp_snooping_trust_regex)
+        if len(trust_candidates):
+            dhcp_snooping["trust"] = True
+
+        if self.config.minimal_results:
+            if not any(dhcp_snooping.values()):
+                dhcp_snooping = None
+
+        return dhcp_snooping
+
+
+
