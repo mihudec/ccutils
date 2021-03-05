@@ -73,7 +73,7 @@ class ExcelInventory(object):
 
     def load_excel(self, path, sheet_name, index_column=None, columns_rename=None, **kwargs):
         self.logger.info("Loading file: '{}' Sheet: '{}' as DF".format(path, sheet_name))
-        df = pd.read_excel(io=path, sheet_name=sheet_name, index_col=index_column, **kwargs)
+        df = pd.read_excel(io=path, sheet_name=sheet_name, index_col=index_column, engine="openpyxl", **kwargs)
         df = df.where(pd.notnull(df), None)
         if columns_rename is not None:
             df = df.rename(columns=columns_rename)
@@ -138,28 +138,58 @@ class ExcelInventory(object):
         with self.output_dir.joinpath(outputfile).open(mode="w") as f:
             yaml.dump(data=self.hosts, stream=f, Dumper=CustomAnsibleDumper)
 
-    def dump_hostvars(self):
+    def dump_hostvars(self, nested=False):
         self.logger.info("Storing host_vars as YAML files.")
         if self.output_dir is not None:
             host_vars_path = self.output_dir.joinpath("host_vars")
             host_vars_path.mkdir(exist_ok=True)
         for hostname, host_vars in self.host_vars.items():
-            path = host_vars_path.joinpath("{}.yml".format(hostname))
-            with path.open(mode="w") as f:
-                data = host_vars
-                data["interfaces"] = self.get_ordered_interfaces(host=hostname)
-                yaml_string = yaml.dump(data=data, Dumper=CustomAnsibleDumper)
-                yaml_string = re.sub("'\"(.*)\"'", '"\\1"', yaml_string)
-                f.write(yaml_string)
-                # yaml.dump(data=host_vars, stream=f, Dumper=CustomAnsibleDumper)
+            if not nested:
+                path = host_vars_path.joinpath("{}.yml".format(hostname))
+                with path.open(mode="w") as f:
+                    data = dict(host_vars)
+                    data["interfaces"] = self.get_ordered_interfaces(host=hostname)
+                    yaml_string = yaml.dump(data=data, Dumper=CustomAnsibleDumper)
+                    yaml_string = re.sub("'\"(.*)\"'", '"\\1"', yaml_string)
+                    f.write(yaml_string)
+                    # yaml.dump(data=host_vars, stream=f, Dumper=CustomAnsibleDumper)
+            else:
+                host_path = host_vars_path.joinpath(hostname)
+                host_vars_path.mkdir(exist_ok=True)
+                general_path = host_path.joinpath("{}.yml".format(hostname))
+                interfaces_path = host_path.joinpath("interfaces.yml")
+                data = dict(host_vars)
+                # Interfaces Section
+                interfaces_data = self.get_ordered_interfaces(host=hostname)
+                with interfaces_path.open(mode="w") as f:
+                    yaml_string = yaml.dump(data=interfaces_data, Dumper=CustomAnsibleDumper)
+                    yaml_string = re.sub("'\"(.*)\"'", '"\\1"', yaml_string)
+                    f.write(yaml_string)
 
-    def dump_groupvars(self):
+                # General Section
+                general_data = data
+                del general_data["interfaces"]
+                with general_path.open(mode="w") as f:
+                    yaml_string = yaml.dump(data=general_data, Dumper=CustomAnsibleDumper)
+                    yaml_string = re.sub("'\"(.*)\"'", '"\\1"', yaml_string)
+                    f.write(yaml_string)
+
+
+
+
+    def dump_groupvars(self, nested=False):
         self.logger.info("Storing group_vars as YAML files.")
         if self.output_dir is not None:
             group_vars_path = self.output_dir.joinpath("group_vars")
             group_vars_path.mkdir(exist_ok=True)
         for groupname, group_vars in self.group_vars.items():
-            path = group_vars_path.joinpath("{}.yml".format(groupname))
-            with path.open(mode="w") as f:
-                yaml.dump(data=group_vars, stream=f, Dumper=CustomAnsibleDumper)
+            if not nested:
+                path = group_vars_path.joinpath("{}.yml".format(groupname))
+                with path.open(mode="w") as f:
+                    yaml.dump(data=group_vars, stream=f, Dumper=CustomAnsibleDumper)
+            else:
+                group_path = group_vars_path.joinpath(groupname)
+                general_path = group_vars_path.joinpath("{}.yml".format(groupname))
+                with general_path.open(mode="w") as f:
+                    yaml.dump(data=group_vars, stream=f, Dumper=CustomAnsibleDumper)
 

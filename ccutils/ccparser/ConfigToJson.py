@@ -66,6 +66,10 @@ class ConfigToJson:
             if interface.mtu or not self.omit_empty:
                 self.data["interfaces"][interface.name]["mtu"] = interface.mtu
 
+            # Get Interface MTU
+            if interface.bandwidth or not self.omit_empty:
+                self.data["interfaces"][interface.name]["bandwidth"] = interface.bandwidth
+
             # Get Interface Load-Interval
             if interface.load_interval or not self.omit_empty:
                 self.data["interfaces"][interface.name]["load_interval"] = interface.load_interval
