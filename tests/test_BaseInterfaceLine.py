@@ -4,6 +4,9 @@ import json
 from ccutils.ccparser import ConfigParser
 from ccutils.utils.common_utils import jprint
 
+DEBUG = False
+VERBOSITY = 5 if DEBUG else 3
+
 
 class TestL2Interface(unittest.TestCase):
     test_file_path = pathlib.Path(__file__).parent.joinpath("resources/interface_l2_test.txt")

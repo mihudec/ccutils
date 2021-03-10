@@ -3,6 +3,9 @@ import pathlib
 import json
 from ccutils.ccparser import BaseConfigParser, ConfigToJson
 
+DEBUG = False
+VERBOSITY = 5 if DEBUG else 3
+
 
 class TestBaseConfigParser(unittest.TestCase):
 
@@ -42,7 +45,7 @@ interface GigabitEthernet1/0/2
 interface GigabitEthernet1/0/3
 !
 """
-        config1 = BaseConfigParser(config=text1, verbosity=5)
+        config1 = BaseConfigParser(config=text1, verbosity=VERBOSITY)
         result = config1.get_section_by_parents(["interface GigabitEthernet1/0/2"])
         print(result)
 

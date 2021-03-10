@@ -17,4 +17,38 @@ interface TenGigabitEthernet0/0/8
  service-policy output PM-MPLS-10G-Out
  ip rsvp bandwidth percent 90
  ip rsvp signalling hello graceful-restart
+
+interface Vlan100
+ ip address 192.168.100.2 255.255.255.0
+ standby 100 name HSRP-100
+ standby 100 ip 192.168.100.1
+ standby 100 preempt
+ standby 100 timers 5 15
+ standby 100 priority 150
+ standby 100 authentication text Cisco123
+ standby 100 follow Follow-Group
+ standby 100 track 100 shutdown
+ standby version 2
+interface Vlan101
+ ip address 192.168.101.2 255.255.255.0
+ standby 101 name HSRP-101
+ standby 101 ip 192.168.101.1
+ standby 101 preempt
+ standby 101 timers 5 15
+ standby 101 priority 150
+ standby 101 authentication md5 key-string Cisco123
+ standby 101 track 101 decrement 50
+ standby version 2
+interface Vlan102
+ ip address 192.168.102.2 255.255.255.0
+ ip address 10.0.102.2 255.255.255.0 secondary
+ standby 102 name HSRP-102
+ standby 102 ip 192.168.102.1
+ standby 102 ip 10.0.102.1 secondary
+ standby 102 preempt
+ standby 102 timers msec 5 15
+ standby 102 priority 150
+ standby 102 authentication md5 key-chain KC-HSRP
+ standby version 2
 end
+

@@ -4,13 +4,16 @@ import json
 from ccutils.ccparser import ConfigParser
 from ccutils.utils.common_utils import jprint
 
+DEBUG = False
+VERBOSITY = 5 if DEBUG else 3
+
 
 class TestCiscoIosParser(unittest.TestCase):
 
     @staticmethod
     def get_config(test_file_name):
         test_file_path = pathlib.Path(__file__).parent.joinpath("resources/{}.txt".format(test_file_name))
-        return ConfigParser(config=test_file_path, device_type="ios")
+        return ConfigParser(config=test_file_path, device_type="ios", verbosity=VERBOSITY)
 
     @staticmethod
     def get_results(results_file_name):

@@ -1,5 +1,5 @@
 from ccutils.ccparser import BaseInterfaceLine
-from ccutils.utils.common_utils import get_logger, split_interface_name, value_to_bool, remove_empty_values, strip_none
+from ccutils.utils.common_utils import get_logger, split_interface_name, value_to_bool, value_to_int, remove_empty_values, strip_none, strip_false
 from ccutils.utils import CiscoRange
 import re
 import functools
@@ -9,7 +9,8 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
 
     # Regexes
     _ip_addr_regex = re.compile(pattern=r"^\sip\saddress\s(?P<ip_address>(?:\d{1,3}\.){3}\d{1,3})\s(?P<mask>(?:\d{1,3}\.){3}\d{1,3})(?:\s(?P<secondary>secondary))?", flags=re.MULTILINE)
-    _ip_unnumbered_interface_regex = re.compile(pattern=r"^ ip unnumbered (?P<unnumbered>\S+)", flags=re.MULTILINE)
+    _ipv4_addr_regex = re.compile(pattern=r"^ ip address (?P<address>(?:\d{1,3}\.){3}\d{1,3}) (?P<mask>(?:\d{1,3}\.){3}\d{1,3})(?: (?P<secondary>secondary))?", flags=re.MULTILINE)
+    _ipv4_unnumbered_interface_regex = re.compile(pattern=r"^ ip unnumbered (?P<unnumbered>\S+)", flags=re.MULTILINE)
     _description_regex = re.compile(pattern=r"^\sdescription\s(?P<description>.*)")
     _vrf_regex = re.compile(pattern=r"^(?:\sip)?\svrf\sforwarding\s(?P<vrf>\S+)", flags=re.MULTILINE)
     _shutdown_regex = re.compile(pattern=r"^\sshutdown", flags=re.MULTILINE)
@@ -17,11 +18,21 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
     _logging_event_regex = re.compile(pattern=r"^\slogging\sevent\s(?P<logging_event>\S+)", flags=re.MULTILINE)
 
     _standby_ip_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\sip\s(?P<ip_address>(?:\d{1,3}\.){3}\d{1,3})(?:\s(?P<secondary>secondary))?", flags=re.MULTILINE)
-    _standby_timers_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\stimers\s(?P<hello>\d+)\s(?P<hold>\d+)", flags=re.MULTILINE)
+    _standby_ipv4_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\sip\s(?P<address>(?:\d{1,3}\.){3}\d{1,3})(?:\s(?P<secondary>secondary))?", flags=re.MULTILINE)
+    _standby_timers_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\stimers(?:\s(?P<timers_msec>msec))?\s(?P<hello>\d+)\s(?P<hold>\d+)", flags=re.MULTILINE)
     _standby_priority_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\spriority\s(?P<priority>\d+)", flags=re.MULTILINE)
     _standby_preempt_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\s(?P<preempt>preempt)", flags=re.MULTILINE)
     _standby_authentication_regex = re.compile(pattern=r"^\sstandby\s(?P<standby_group>\d+)\sauthentication\s(?P<authentication_type>md5)\skey-string\s(?:(?P<key_type>0|7)\s)?(?P<key_string>\S+)", flags=re.MULTILINE)
     _standby_version_regex = re.compile(pattern=r"^\sstandby\sversion\s(?P<version>2)")
+    _standby_group_regex = re.compile(pattern=r"^ standby (?P<standby_group>\d+)")
+    _standby_name_regex = re.compile(pattern=r"^ standby (?P<standby_group>\d+) name (?P<name>\S+)", flags=re.MULTILINE)
+    _standby_follow_regex = re.compile(pattern=r"^ standby (?P<standby_group>\d+) follow (?P<follow>\S+)", flags=re.MULTILINE)
+    _standby_track_regex = re.compile(pattern=r"^ standby (?P<standby_group>\d+) track (?P<id>\d+) (?P<action>shutdown|decrement)(?: (?P<decrement>\d+))?$", flags=re.MULTILINE)
+    _standby_auth_regexes = [
+        re.compile(pattern="^ standby (?P<standby_group>\d+) authentication (?P<auth_method>md5) key-chain (?P<keychain>\S+)$", flags=re.MULTILINE),
+        re.compile(pattern="^ standby (?P<standby_group>\d+) authentication (?P<auth_method>md5|text) (?:key-string )?(?:(?P<encryption_type>\d+) )?(?P<key_string>\S+)$", flags=re.MULTILINE)
+
+    ]
 
     _helper_address_regex = re.compile(pattern=r"^\sip\shelper-address\s(?P<helper_address>(?:\d{1,3}\.){3}\d{1,3})", flags=re.MULTILINE)
 
@@ -114,6 +125,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         regexes = [
             self._description_regex,
             self._ip_addr_regex,
+            self._ipv4_addr_regex,
             self._vrf_regex,
             self._shutdown_regex,
             self._ospf_priority_regex,
@@ -135,6 +147,14 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             self._standby_preempt_regex,
             self._standby_authentication_regex,
             self._standby_version_regex,
+            self._standby_name_regex,
+            self._standby_ipv4_regex,
+            self._standby_auth_regexes,
+            self._standby_group_regex,
+            self._standby_follow_regex,
+            self._standby_track_regex,
+            self._standby_auth_regexes[0],
+            self._standby_auth_regexes[1],
             self._helper_address_regex,
             self._native_vlan_regex,
             self._trunk_encapsulation_regex,
@@ -168,7 +188,7 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             self._service_instance_encapsulation_string_regex,
             self._service_instance_bridge_domain_regex,
             self._service_instance_service_policy_regex,
-            self._ip_unnumbered_interface_regex,
+            self._ipv4_unnumbered_interface_regex,
             self._negotiation_regex,
             self._ip_dhcp_snooping_trust_regex,
             re.compile(pattern=r"^\s*!.*", flags=re.MULTILINE),
@@ -185,13 +205,6 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             return unprocessed_children
         else:
             return [x.text for x in unprocessed_children]
-
-    def _val_to_bool(self, entry, key):
-        if entry[key]:
-            entry[key] = True
-        else:
-            entry[key] = False
-        return entry
 
     @property
     @functools.lru_cache()
@@ -330,6 +343,9 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
             If there is no IP address present on the interface, an empty list is returned.
 
         """
+        self.logger.warning("DEPRECATION WARNING: You are using deprecated property 'ip_addresses'. Please switch to using 'ipv4_addresses'. The 'ip_addresses' property will be removed in Version 0.3.0.")
+
+        # print("DEPRECATION WARNING: You are using deprecated property 'ip_addresses'. Please switch to using 'ipv4_addresses'. The 'ip_addresses' property will be removed in Version 0.3.0.")
         ip_addresses = []
         candidates = self.re_search_children(regex=self._ip_addr_regex)
         for candidate in candidates:
@@ -338,12 +354,68 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
 
     @property
     @functools.lru_cache()
+    def ipv4_addresses(self) -> list:
+        """
+        Return list of IPv4 addresses present on the interface
+
+        Returns:
+            list: List of dictionaries representing individual IPv4 addresses
+
+            Example::
+
+                [
+                    {
+                        "address": "10.0.0.1",
+                        "mask": "255.255.255.0",
+                        "secondary": False
+                    },
+                    {
+                        "address": "10.0.1.1",
+                        "mask": "255.255.255.0",
+                        "secondary": True
+                    }
+                ]
+
+            If there is no IP address present on the interface, an empty list is returned.
+
+        """
+        ipv4_addresses = []
+        candidates = self.re_search_children(regex=self._ipv4_addr_regex)
+        for candidate in candidates:
+            ipv4_addresses.append(
+                value_to_bool(entry=candidate.re_search(regex=self._ipv4_addr_regex, group="ALL"), keys=["secondary"])
+            )
+        if self.config.minimal_results:
+            ipv4_addresses = strip_false(ipv4_addresses)
+        return ipv4_addresses
+
+    @property
+    @functools.lru_cache()
+    def ipv6_addresses(self) -> list:
+        """
+        Return list of IPv6 addresses present on the interface
+
+        Returns:
+            list: List of dictionaries representing individual IPv6 addresses
+
+            If there is no IP address present on the interface, an empty list is returned.
+
+        """
+        raise NotImplementedError("Sorry, this property is waiting to be implemented")
+
+    @property
+    @functools.lru_cache()
     def ip_unnumbered_interface(self):
-        ip_unnumbered_interface = None
-        candidates = self.re_search_children(regex=self._ip_unnumbered_interface_regex, group="unnumbered")
+        return self.ipv4_unnumbered_interface()
+
+    @property
+    @functools.lru_cache()
+    def ipv4_unnumbered_interface(self):
+        ipv4_unnumbered_interface = None
+        candidates = self.re_search_children(regex=self._ipv4_unnumbered_interface_regex, group="unnumbered")
         if len(candidates):
-            ip_unnumbered_interface = candidates[0]
-        return ip_unnumbered_interface
+            ipv4_unnumbered_interface = candidates[0]
+        return ipv4_unnumbered_interface
 
 
 
@@ -521,6 +593,148 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
 
     @property
     @functools.lru_cache()
+    def standby(self):
+        standby = {}
+        # Get only list of all standby groups
+        standby_group_candidates = [x for x in set(
+            self.re_search_children(regex=self._standby_group_regex, group="standby_group"))]
+        standby_global_candidates = self.re_search_children(regex=r"standby [^\d].*")
+        if len(standby_group_candidates) or len(standby_global_candidates):
+            standby = {"groups": {}}
+        else:
+            return None
+
+
+        for group_id in standby_group_candidates:
+            standby["groups"][group_id] = {"group": int(group_id)}
+
+        # Standby IPv4
+        standby_ipv4_candidates = [value_to_bool(entry=x, keys=["secondary"], keep_none=False) for x in
+                                   self.re_search_children(regex=self._standby_ipv4_regex, group="ALL")]
+        self.logger.debug(msg=f"Interface {self.name}:\tIPv4 Candidates: {standby_ipv4_candidates}")
+
+        standby_preempt_candidates = [value_to_bool(entry=x, keys=["preempt"], keep_none=False) for x in
+                                      self.re_search_children(regex=self._standby_preempt_regex, group="ALL")]
+        self.logger.debug(msg=f"Interface {self.name}:\tPreempt Candidates: {standby_preempt_candidates}")
+
+        standby_timers_candidates = [value_to_bool(entry=x, keys=["timers_msec"], keep_none=False) for x in
+                                     self.re_search_children(regex=self._standby_timers_regex, group="ALL")]
+        self.logger.debug(msg=f"Interface {self.name}:\tTimers Candidates: {standby_timers_candidates}")
+
+        standby_priority_candidates = self.re_search_children(regex=self._standby_priority_regex, group="ALL")
+        self.logger.debug(msg=f"Interface {self.name}:\tPriority Candidates: {standby_priority_candidates}")
+
+        standby_name_candidates = self.re_search_children(regex=self._standby_name_regex, group="ALL")
+        self.logger.debug(msg=f"Interface {self.name}:\tName Candidates: {standby_name_candidates}")
+
+        standby_follow_candidates = self.re_search_children(regex=self._standby_follow_regex, group="ALL")
+        self.logger.debug(msg=f"Interface {self.name}:\tFollow Candidates: {standby_follow_candidates}")
+
+        standby_auth_candidates = self.re_search_children_multipattern(regexes=self._standby_auth_regexes, group="ALL")
+        self.logger.debug(msg=f"Interface {self.name}:\tAuth Candidates: {standby_auth_candidates}")
+
+        standby_track_candidates = self.re_search_children(regex=self._standby_track_regex, group="ALL")
+        self.logger.debug(msg=f"Interface {self.name}:\tTrack Candidates: {standby_track_candidates}")
+
+        standby_version_candidates = self.re_search_children(regex=self._standby_version_regex, group="ALL")
+        self.logger.debug(msg=f"Interface {self.name}:\tVersion Candidates: {standby_version_candidates}")
+
+        # Standby Version
+        if len(standby_version_candidates):
+            standby["version"] = int(standby_version_candidates[0]["version"])
+        else:
+            standby["version"] = None
+
+        if "groups" in standby.keys():
+            for group_id in standby["groups"].keys():
+                ipv4s = [x for x in standby_ipv4_candidates if x["standby_group"] == group_id]
+                for x in ipv4s:
+                    del x["standby_group"]
+                standby["groups"][group_id]["ipv4"] = ipv4s
+
+                preempt = [x for x in standby_preempt_candidates if x["standby_group"] == group_id]
+                if len(preempt):
+                    preempt = preempt[0]["preempt"]
+                    standby["groups"][group_id]["preempt"] = preempt
+                else:
+                    standby["groups"][group_id]["preempt"] = None
+
+
+                timers = [x for x in standby_timers_candidates if x["standby_group"] == group_id]
+                if len(timers):
+                    timers = timers[0]
+                    del timers["standby_group"]
+                    standby["groups"][group_id].update(value_to_int(entry=timers, keys=["hello", "hold"]))
+                else:
+                    standby["groups"][group_id].update({k: None for k in ["hello", "hold", "timers_msec"]})
+
+                priority = [x for x in standby_priority_candidates if x["standby_group"] == group_id]
+                if len(priority):
+                    priority = priority[0]["priority"]
+                    standby["groups"][group_id]["priority"] = int(priority)
+                else:
+                    standby["groups"][group_id]["priority"] = None
+
+                name = [x for x in standby_name_candidates if x["standby_group"] == group_id]
+                if len(name):
+                    name = name[0]["name"]
+                    standby["groups"][group_id]["name"] = name
+                else:
+                    standby["groups"][group_id]["name"] = None
+
+                follow = [x for x in standby_follow_candidates if x["standby_group"] == group_id]
+                if len(follow):
+                    follow = follow[0]["follow"]
+                    standby["groups"][group_id]["follow"] = follow
+                else:
+                    standby["groups"][group_id]["follow"] = None
+
+                auth = [x for x in standby_auth_candidates if x["standby_group"] == group_id]
+                if len(auth):
+                    auth = auth[0]
+                    if auth["auth_method"] == "text":
+                        standby["groups"][group_id]["authentication"] = {
+                            "method": "text",
+                            "key": {
+                                "string": auth["key_string"]
+                            }
+                        }
+                    elif auth["auth_method"] == "md5":
+                        standby["groups"][group_id]["authentication"] = {
+                            "method": "md5"
+                        }
+                        if "keychain" in auth.keys():
+                            standby["groups"][group_id]["authentication"]["keychain"] = auth["keychain"]
+                        else:
+                            standby["groups"][group_id]["authentication"]["key"] = {
+                                "string": auth["key_string"],
+                                "encryption_type": int(auth["encryption_type"]) if auth["encryption_type"] is not None else None
+                            }
+                else:
+                    standby["groups"][group_id]["authentication"] = None
+
+                track = [x for x in standby_track_candidates if x["standby_group"] == group_id]
+                if len(track):
+                    standby["groups"][group_id]["track"] = []
+                    for t in track:
+                        del t["standby_group"]
+                        t = value_to_int(entry=t, keys=["decrement"])
+                        standby["groups"][group_id]["track"].append(t)
+                else:
+                    standby["groups"][group_id]["track"] = None
+
+
+
+        if self.config.minimal_results:
+            standby = strip_none(standby)
+            standby = strip_false(standby)
+        if not any(standby.values()):
+            standby = None
+
+        return standby
+
+    @property
+    @functools.lru_cache()
     def bfd(self):
         bfd = {}
         candidates = self.re_search_children(regex=self._bfd_template_regex, group="ALL")
@@ -560,8 +774,9 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
 
     @property
     @functools.lru_cache()
-    def standby(self):
+    def standby_v1(self):
         """
+        DEPRECATED: Use ``self.hsrp`` or ``self.standby`` instead
         HSRP related configuration. Groups, IP addresses, hello/hold timers, priority and authentication.
 
 
@@ -572,15 +787,10 @@ class CiscoIosInterfaceLine(BaseInterfaceLine):
         if self.re_search_children(regex=self._standby_version_regex, group="version"):
             data["version"] = 2
         standby_ips = [self._val_to_bool(entry=x, key="secondary") for x in self.re_search_children(regex=self._standby_ip_regex, group="ALL")]
-        #print(standby_ips)
         standby_timers = self.re_search_children(regex=self._standby_timers_regex, group="ALL")
-        #print(standby_timers)
         standby_priority = self.re_search_children(regex=self._standby_priority_regex, group="ALL")
-        #print(standby_priority)
         standby_preempt = [self._val_to_bool(entry=x, key="preempt") for x in self.re_search_children(regex=self._standby_preempt_regex, group="ALL")]
-        #print(standby_preempt)
         standby_authentication = self.re_search_children(regex=self._standby_authentication_regex, group="ALL")
-        #print(standby_authentication)
         if not len(standby_ips):
             return None
         data["groups"] = {}

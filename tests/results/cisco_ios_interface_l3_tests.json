@@ -23,6 +23,130 @@
       "bfd": {
         "template": "BFD-1hop-5ms"
       }
+    },
+    "Vlan100": {
+      "ipv4": {
+        "addresses": [
+          {
+            "address": "192.168.100.2",
+            "mask": "255.255.255.0"
+          }
+        ]
+      },
+      "standby": {
+        "groups": {
+          "100": {
+            "group": 100,
+            "ipv4": [
+              {
+                "address": "192.168.100.1"
+              }
+            ],
+            "preempt": true,
+            "hello": 5,
+            "hold": 15,
+            "priority": 150,
+            "name": "HSRP-100",
+            "follow": "Follow-Group",
+            "authentication": {
+              "method": "text",
+              "key": {
+                "string": "Cisco123"
+              }
+            },
+            "track": [
+              {
+                "id": "100",
+                "action": "shutdown"
+              }
+            ]
+          }
+        },
+        "version": 2
+      }
+    },
+    "Vlan101": {
+      "ipv4": {
+        "addresses": [
+          {
+            "address": "192.168.101.2",
+            "mask": "255.255.255.0"
+          }
+        ]
+      },
+      "standby": {
+        "groups": {
+          "101": {
+            "group": 101,
+            "ipv4": [
+              {
+                "address": "192.168.101.1"
+              }
+            ],
+            "preempt": true,
+            "hello": 5,
+            "hold": 15,
+            "priority": 150,
+            "name": "HSRP-101",
+            "authentication": {
+              "method": "md5",
+              "key": {
+                "string": "Cisco123"
+              }
+            },
+            "track": [
+              {
+                "id": "101",
+                "action": "decrement",
+                "decrement": 50
+              }
+            ]
+          }
+        },
+        "version": 2
+      }
+    },
+    "Vlan102": {
+      "ipv4": {
+        "addresses": [
+          {
+            "address": "192.168.102.2",
+            "mask": "255.255.255.0"
+          },
+          {
+            "address": "10.0.102.2",
+            "mask": "255.255.255.0",
+            "secondary": true
+          }
+        ]
+      },
+      "standby": {
+        "groups": {
+          "102": {
+            "group": 102,
+            "ipv4": [
+              {
+                "address": "192.168.102.1"
+              },
+              {
+                "address": "10.0.102.1",
+                "secondary": true
+              }
+            ],
+            "preempt": true,
+            "timers_msec": true,
+            "hello": 5,
+            "hold": 15,
+            "priority": 150,
+            "name": "HSRP-102",
+            "authentication": {
+              "method": "md5",
+              "keychain": "KC-HSRP"
+            }
+          }
+        },
+        "version": 2
+      }
     }
   }
 }

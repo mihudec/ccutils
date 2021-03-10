@@ -155,12 +155,12 @@ class ExcelInventory(object):
                     # yaml.dump(data=host_vars, stream=f, Dumper=CustomAnsibleDumper)
             else:
                 host_path = host_vars_path.joinpath(hostname)
-                host_vars_path.mkdir(exist_ok=True)
+                host_path.mkdir(exist_ok=True)
                 general_path = host_path.joinpath("{}.yml".format(hostname))
                 interfaces_path = host_path.joinpath("interfaces.yml")
                 data = dict(host_vars)
                 # Interfaces Section
-                interfaces_data = self.get_ordered_interfaces(host=hostname)
+                interfaces_data = {"interfaces": self.get_ordered_interfaces(host=hostname)}
                 with interfaces_path.open(mode="w") as f:
                     yaml_string = yaml.dump(data=interfaces_data, Dumper=CustomAnsibleDumper)
                     yaml_string = re.sub("'\"(.*)\"'", '"\\1"', yaml_string)
@@ -174,9 +174,6 @@ class ExcelInventory(object):
                     yaml_string = re.sub("'\"(.*)\"'", '"\\1"', yaml_string)
                     f.write(yaml_string)
 
-
-
-
     def dump_groupvars(self, nested=False):
         self.logger.info("Storing group_vars as YAML files.")
         if self.output_dir is not None:
@@ -189,7 +186,8 @@ class ExcelInventory(object):
                     yaml.dump(data=group_vars, stream=f, Dumper=CustomAnsibleDumper)
             else:
                 group_path = group_vars_path.joinpath(groupname)
-                general_path = group_vars_path.joinpath("{}.yml".format(groupname))
+                group_path.mkdir(exist_ok=True)
+                general_path = group_path.joinpath("{}.yml".format(groupname))
                 with general_path.open(mode="w") as f:
                     yaml.dump(data=group_vars, stream=f, Dumper=CustomAnsibleDumper)
 

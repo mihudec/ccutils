@@ -572,8 +572,8 @@ class CiscoIosParser(BaseConfigParser):
                 entry = line.re_search(regex=self._address_family_regex, group="ALL")
                 rt_candidates = line.re_search_children(regex=self._vrf_afi_rt_regex, group="ALL")
                 if len(rt_candidates):
-                    entry["import"] = [x["rt"] for x in rt_candidates if x["action"] == "import"]
-                    entry["export"] = [x["rt"] for x in rt_candidates if x["action"] == "export"]
+                    entry["import"] = [{"rt": x["rt"]} for x in rt_candidates if x["action"] == "import"]
+                    entry["export"] = [{"rt": x["rt"]} for x in rt_candidates if x["action"] == "export"]
                 entry = remove_empty_values(entry)
                 address_families.append(entry)
             if len(address_families):
@@ -665,7 +665,7 @@ class CiscoIosParser(BaseConfigParser):
         addresses = []
         for interface_line in self.interface_lines:
             if "l3" in interface_line.flags:
-                addresses.extend([x["ip_address"] for x in interface_line.ip_addresses])
+                addresses.extend([x["address"] for x in interface_line.ipv4_addresses])
         return addresses
 
     @functools.lru_cache()
@@ -698,7 +698,7 @@ class CiscoIosParser(BaseConfigParser):
         else:
             interfaces = [x for x in interfaces if x.vrf == vrf]
         for interface in interfaces:
-            addresses.extend([x["ip_address"] for x in interface.ip_addresses])
+            addresses.extend([x["address"] for x in interface.ipv4_addresses])
         return addresses
 
     @property
@@ -722,11 +722,14 @@ class CiscoIosParser(BaseConfigParser):
         addresses = []
         # Filter L3 interfaces
         interfaces = [x for x in self.interface_lines if "l3" in x.flags]
+        print(interfaces)
         # Filter Stadnby Interfaces
         interfaces = [x for x in interfaces if x.standby is not None]
+        print(interfaces)
         for interface in interfaces:
             for group in interface.standby["groups"].values():
-                addresses.extend([x["ip_address"] for x in group["ip_addresses"]])
+                print(group)
+                addresses.extend([x["address"] for x in group["ipv4"]])
         return addresses
 
     @functools.lru_cache()
@@ -752,7 +755,7 @@ class CiscoIosParser(BaseConfigParser):
         addresses = []
         # Filter L3 interfaces
         interfaces = [x for x in self.interface_lines if "l3" in x.flags]
-        # Filter Stadnby Interfaces
+        # Filter Standby Interfaces
         interfaces = [x for x in interfaces if x.standby is not None]
         # Filter VRF Interfaces
         if vrf == "global":
@@ -762,7 +765,7 @@ class CiscoIosParser(BaseConfigParser):
 
         for interface in interfaces:
             for group in interface.standby["groups"].values():
-                addresses.extend([x["ip_address"] for x in group["ip_addresses"]])
+                addresses.extend([x["address"] for x in group["ipv4"]])
         return addresses
 
 

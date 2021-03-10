@@ -2,6 +2,9 @@ import unittest
 from ccutils.utils.common_utils import split_interface_name, convert_interface_name
 import json
 
+DEBUG = False
+VERBOSITY = 5 if DEBUG else 3
+
 
 class TestCommonUtils(unittest.TestCase):
 

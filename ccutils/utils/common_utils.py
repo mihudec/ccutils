@@ -205,9 +205,23 @@ def strip_none(data):
         return data
 
 
+def strip_false(data):
+    # https://stackoverflow.com/questions/20558699/python-how-recursively-remove-false-values-from-a-nested-data-structure-lists-a
+    if isinstance(data, dict):
+        return {k: strip_false(v) for k, v in data.items() if k is not False and v is not False}
+    elif isinstance(data, list):
+        return [strip_false(item) for item in data if item is not False]
+    elif isinstance(data, tuple):
+        return tuple(strip_false(item) for item in data if item is not False)
+    elif isinstance(data, set):
+        return {strip_false(item) for item in data if item is not False}
+    else:
+        return data
+
+
 def value_to_bool(entry: dict, keys: list, keep_none=False) -> dict:
     if not isinstance(keys, list):
-        keys = list[keys]
+        keys = [keys]
     for key in keys:
         if key not in entry.keys():
             continue
@@ -218,7 +232,20 @@ def value_to_bool(entry: dict, keys: list, keep_none=False) -> dict:
                 continue
             else:
                 entry[key] = False
-        return entry
+    return entry
+
+
+def value_to_int(entry: dict, keys: list) -> dict:
+    if not isinstance(keys, list):
+        keys = [keys]
+    for key in keys:
+        if key not in entry.keys():
+            continue
+        try:
+            entry[key] = int(entry[key])
+        except (ValueError, TypeError):
+            continue
+    return entry
 
 
 def check_path(path, create=False):

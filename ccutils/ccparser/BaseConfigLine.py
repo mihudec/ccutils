@@ -108,7 +108,7 @@ class BaseConfigLine(object):
 
         Returns:
             list: List of all child object which match given regex, or, if `group` was provided, returns
-            list containing matched grop across all children.
+            list containing matched group across all children.
 
                 Example::
 
@@ -157,6 +157,36 @@ class BaseConfigLine(object):
         if group:
             result = [x.re_search(regex=pattern, group=group) for x in result]
         return result
+
+    # TODO: Add Tests
+    # TODO: Add Examples
+    def re_search_children_multipattern(self, regexes: list, group=None, deduplicate: bool = True) -> list:
+        """
+        Wrapper function for ``self.re_search_children()`` allowing to use multiple patterns
+
+        Args:
+            regexes (``list``): List of patterns to search
+            group (``str`` or ``int``, optional): Return only specific (named or numbered) group of given regex.
+                If set to "ALL", return value will be a dictionary with all named groups of the regex.
+            deduplicate (``bool``, optional): When set to ``True`` (default), results will not contain duplicate line objects in
+                cases where multiple patterns match the same line.
+
+        Returns:
+            list: List of all child object which match given regex, or, if `group` was provided, returns
+            list containing matched group across all children.
+
+        """
+        results = []
+        for regex in regexes:
+            for result in [x for x in self.re_search_children(regex=regex, group=group)]:
+                if result in results:
+                    if deduplicate:
+                        continue
+                    else:
+                        results.append(result)
+                else:
+                    results.append(result)
+        return results
 
     def re_search(self, regex, group=None):
         """

@@ -3,6 +3,9 @@ import pathlib
 import json
 from ccutils.utils import CiscoRange
 
+DEBUG = False
+VERBOSITY = 5 if DEBUG else 3
+
 
 class TestCiscoRange(unittest.TestCase):
 
@@ -37,7 +40,7 @@ class TestCiscoRange(unittest.TestCase):
 
         for test in tests.keys():
             with self.subTest(msg=test):
-                cr = CiscoRange(tests[test]["source"], verbosity=5)
+                cr = CiscoRange(tests[test]["source"], verbosity=VERBOSITY)
                 # print(list(cr))
                 self.assertSequenceEqual(list(cr), tests[test]["result"])
 
@@ -83,7 +86,7 @@ class TestCiscoRange(unittest.TestCase):
         for test in tests.keys():
             with self.subTest(msg=test):
                 print("\n\nWorking on test: {}\n\n".format(test))
-                cr = CiscoRange(tests[test]["source"], verbosity=5)
+                cr = CiscoRange(tests[test]["source"], verbosity=VERBOSITY)
                 # print(cr.compressed_list)
                 self.assertEqual(cr.compressed_list, tests[test]["result"])
 
